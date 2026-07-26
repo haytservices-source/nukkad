@@ -349,8 +349,9 @@ function showSuccess(){
         phone: regData.phone,
         location: regData.location,
 
-        lat: 12.9352 + (Math.random() - 0.5) * 0.02,
-        lng: 77.6245 + (Math.random() - 0.5) * 0.02,
+        lat: regData.latitude,
+        lng: regData.longitude,
+        accuracy: regData.accuracy,
 
         status: "pending",
         live: false,
