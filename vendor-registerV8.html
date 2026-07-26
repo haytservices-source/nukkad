@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nukkad — Vendor Registration</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #FF6B35; --primary-light: #FFF0EB; --green: #1A936F; --green-light: #E8F5E9;
+      --blue: #004E89; --blue-light: #E3F2FD; --orange: #F57C00; --orange-light: #FFF8E1;
+      --red: #E53935; --red-light: #FFEBEE; --gray-100: #F7F7F7; --gray-200: #F0F0F0;
+      --gray-300: #E8E8E8; --gray-400: #E0E0E0; --gray-500: #888; --gray-600: #666;
+      --gray-700: #333; --dark: #1A1A2E; --white: #fff;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.06); --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+      --shadow-primary: 0 4px 16px rgba(255,107,53,0.30);
+      --radius-sm: 10px; --radius-md: 12px; --radius-lg: 14px; --radius-xl: 16px; --radius-2xl: 20px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-100); color: var(--dark); min-height: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .header {
+      background: var(--primary); padding: 20px; border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+      text-align: center;
+    }
+    .logo-icon { width: 48px; height: 48px; background: var(--white); border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 8px; }
+    .logo-text { color: var(--white); font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-sub { color: rgba(255,255,255,0.8); font-size: 14px; margin-top: 4px; }
+    .container { max-width: 480px; margin: 0 auto; padding: 20px; }
+    .card {
+      background: var(--white); border-radius: var(--radius-xl); padding: 24px;
+      margin-bottom: 16px; box-shadow: var(--shadow-sm);
+    }
+    .card-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .card-sub { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--gray-500); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input, .form-select {
+      width: 100%; border: 2px solid var(--gray-300); border-radius: var(--radius-md);
+      padding: 14px; font-size: 15px; font-family: inherit; color: var(--dark);
+      outline: none; transition: border-color 0.2s; background: var(--white);
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--primary); }
+    .form-input::placeholder { color: var(--gray-400); }
+    textarea.form-input { height: 90px; resize: none; }
+    .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+    .btn-primary {
+      width: 100%; padding: 16px; background: var(--primary); border-radius: var(--radius-lg);
+      text-align: center; color: var(--white); font-size: 16px; font-weight: 700;
+      border: none; cursor: pointer; box-shadow: var(--shadow-primary); transition: all 0.2s;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary {
+      width: 100%; padding: 14px; background: var(--gray-200); border-radius: var(--radius-lg);
+      text-align: center; color: var(--dark); font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; transition: all 0.2s; margin-top: 10px;
+    }
+    .success-box {
+      background: var(--green-light); border: 2px solid var(--green); border-radius: var(--radius-lg);
+      padding: 20px; text-align: center; margin-bottom: 20px;
+    }
+    .success-box .icon { font-size: 48px; margin-bottom: 8px; }
+    .success-box .title { font-size: 18px; font-weight: 700; color: var(--green); }
+    .success-box .text { font-size: 14px; color: var(--gray-600); margin-top: 4px; }
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+    .photo-add {
+      aspect-ratio: 1; border-radius: var(--radius-md); border: 2px dashed var(--gray-400);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #FAFAFA; cursor: pointer; transition: all 0.2s;
+    }
+    .photo-add:hover { border-color: var(--primary); background: var(--primary-light); }
+    .photo-add .plus { font-size: 24px; color: var(--gray-500); }
+    .photo-add .label { font-size: 11px; color: var(--gray-500); font-weight: 600; }
+    .photo-thumb { width: 100%; aspect-ratio: 1; border-radius: var(--radius-md); object-fit: cover; }
+    .photo-uploading { display: flex; align-items: center; justify-content: center; background: var(--gray-100); }
+    .spinner { width: 24px; height: 24px; border: 3px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .location-row {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .location-row .form-input { flex: 1; }
+    .loc-btn {
+      padding: 14px; background: var(--blue-light); border: 2px solid var(--blue-light);
+      border-radius: var(--radius-md); color: var(--blue); font-size: 18px;
+      cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+    }
+    .loc-btn:hover { background: var(--blue); color: var(--white); }
+    .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gray-300); transition: all 0.3s; }
+    .step-dot.active { background: var(--primary); width: 24px; border-radius: 4px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-icon">🛒</div>
+    <div class="logo-text">Nukkad</div>
+    <div class="header-sub">Vendor Registration</div>
+  </div>
+
+  <div class="container">
+    <!-- Step 1: Basic Info -->
+    <div id="step1">
+      <div class="step-indicator">
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📝 Basic Information</div>
+        <div class="card-sub">Tell us about your shop</div>
+        <div class="form-group">
+          <div class="form-label">Shop Name *</div>
+          <input type="text" class="form-input" id="reg-name" placeholder="e.g. Raju Fruit Cart">
+        </div>
+        <div class="form-group">
+          <div class="form-label">What do you sell? *</div>
+          <select class="form-select" id="reg-type">
+            <option value="fruits">Fruits</option>
+            <option value="vegetables">Vegetables</option>
+            <option value="snacks">Snacks</option>
+            <option value="tea">Tea Shop</option>
+            <option value="flowers">Flowers</option>
+            <option value="juice">Juice</option>
+            <option value="clinic">Clinic</option>
+            <option value="medical">Medical Shop</option>
+            <option value="grocery">Grocery Shop</option>
+            <option value="hardware">Hardware</option>
+            <option value="electrical">Electricals</option>
+            <option value="showroom">Showroom</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Items / Services *</div>
+          <textarea class="form-input" id="reg-items" placeholder="List what you sell... e.g. Mangoes, Bananas, Apples"></textarea>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Phone Number *</div>
+          <input type="tel" class="form-input" id="reg-phone" placeholder="+91 XXXXX XXXXX">
+        </div>
+        <button class="btn-primary" onclick="goStep2()">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Location & Photos -->
+    <div id="step2" class="hidden">
+      <div class="step-indicator">
+        <div class="step-dot"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📍 Location</div>
+        <div class="card-sub">Where can customers find you?</div>
+        <div class="form-group">
+          <div class="form-label">Address / Area *</div>
+          <div class="location-row">
+            <input type="text" class="form-input" id="reg-location" placeholder="e.g. Koramangala 4th Block, Bangalore">
+            <button class="loc-btn" onclick="getGPS()" title="Use my current location">📍</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📸 Shop Photos</div>
+        <div class="card-sub">Add photos of your shop, items & yourself</div>
+        <div class="photo-grid" id="photo-grid">
+          <div class="photo-add" onclick="addPhoto()">
+            <span class="plus">+</span>
+            <span class="label">Add</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-secondary" onclick="goStep1()">← Back</button>
+      <button class="btn-primary" onclick="submitRegistration()">📤 Submit for Approval</button>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div id="step3" class="hidden">
+      <div class="success-box">
+        <div class="icon">🎉</div>
+        <div class="title">Registration Submitted!</div>
+        <div class="text">Your profile is under review. Once approved by admin, you will receive a username and password to access your dashboard.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">What happens next?</div>
+        <div style="font-size:14px; color:var(--gray-600); line-height:1.6; margin-top:8px;">
+          <p>1️⃣ Admin will review your profile & photos</p>
+          <p>2️⃣ Upon approval, a username & password will be generated</p>
+          <p>3️⃣ Use those credentials to log into your Vendor Dashboard</p>
+          <p>4️⃣ Go live and start receiving customers!</p>
+        </div>
+      </div>
+      <a href="customerV7.html" class="btn-secondary" style="display:block; text-decoration:none;">🏠 Back to Home</a>
+      <a href="vendorV7.html" class="btn-primary" style="display:block; text-decoration:none; margin-top:10px;">🔐 Go to Vendor Login</a>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'nukkad_data';
+    let memoryState = null;
+
+    function getState() {
+      try {
+        const d = localStorage.getItem(STORAGE_KEY);
+        return d ? JSON.parse(d) : null;
+      } catch (e) {
+        return memoryState;
+      }
+    }
+    function saveState(s) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
+      memoryState = s;
+    }
+
+    function initSharedState() {
+      let s = getState();
+      if (!s) {
+        s = {
+          vendors: [
+            { id:'v1', name:'Raju Fruit Cart', type:'fruits', items:'Mangoes, Bananas, Apples, Papaya',
+              phone:'+91 98765 43210', location:'Koramangala 4th Block, Bangalore',
+              lat:12.9352, lng:77.6245, status:'approved', live:true, suspended:false,
+              rating:4.8, reviews:124, views:1240, calls:89, lastActive:'2 min ago',
+              submittedAt:'2024-01-15', emoji:'🍎', color:'#FF6B35',
+              username:'raju123', password:'pass456',
+              photos:[{id:'p1', url:'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400', caption:'Fresh fruit display', status:'approved'}],
+              products:[{id:'pr1', name:'Mangoes', price:'₹120/kg', categories:['fruits'], available:true}]
+            },
+            { id:'v2', name:'Lakshmi Veggies', type:'vegetables', items:'Tomatoes, Onions, Spinach, Beans',
+              phone:'+91 87654 32109', location:'Koramangala 5th Block, Bangalore',
+              lat:12.9380, lng:77.6260, status:'approved', live:true, suspended:false,
+              rating:4.6, reviews:89, views:890, calls:56, lastActive:'5 min ago',
+              submittedAt:'2024-01-14', emoji:'🥬', color:'#1A936F',
+              username:'lakshmi123', password:'pass456',
+              photos:[], products:[]
+            },
+            { id:'v3', name:'Chai & Snacks', type:'tea', items:'Masala Chai, Samosa, Vada Pav',
+              phone:'+91 76543 21098', location:'Koramangala 6th Block, Bangalore',
+              lat:12.9330, lng:77.6280, status:'approved', live:true, suspended:false,
+              rating:4.9, reviews:256, views:2100, calls:167, lastActive:'1 min ago',
+              submittedAt:'2024-01-13', emoji:'☕', color:'#FF9800',
+              username:'chai123', password:'pass456',
+              photos:[{id:'p2', url:'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?w=400', caption:'Hot chai', status:'approved'}],
+              products:[{id:'pr2', name:'Masala Chai', price:'₹15/cup', categories:['tea'], available:true}]
+            },
+            { id:'v4', name:'Gowda Juice Center', type:'juice', items:'Sugarcane, Tender Coconut, Mosambi',
+              phone:'+91 65432 10987', location:'Koramangala 1st Block, Bangalore',
+              lat:12.9300, lng:77.6200, status:'approved', live:false, suspended:false,
+              rating:4.7, reviews:167, views:670, calls:34, lastActive:'3 hours ago',
+              submittedAt:'2024-01-12', emoji:'🥤', color:'#8BC34A',
+              username:'gowda123', password:'pass456',
+              photos:[], products:[]
+            },
+            { id:'v5', name:'City Medicals', type:'medical', items:'Medicines, First Aid, Health Supplements',
+              phone:'+91 54321 09876', location:'Koramangala 7th Block, Bangalore',
+              lat:12.9400, lng:77.6300, status:'pending', live:false, suspended:false,
+              rating:0, reviews:0, views:0, calls:0, lastActive:'Never',
+              submittedAt:'2024-01-16', emoji:'💊', color:'#E53935',
+              username:'', password:'',
+              photos:[{id:'p3', url:'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', caption:'Shop front', status:'pending'}],
+              products:[]
+            }
+          ],
+          currentVendorId: null,
+          nextVendorId: 6, nextPhotoId: 4, nextProductId: 3
+        };
+        saveState(s);
+      }
+      s.vendors.forEach(v => {
+        if (!v.photos) v.photos = [];
+        if (!v.products) v.products = [];
+        if (v.suspended === undefined) v.suspended = false;
+        if (!v.emoji) v.emoji = getEmoji(v.type);
+        if (!v.color) v.color = getColor(v.type);
+      });
+      return s;
+    }
+
+    function getEmoji(t) {
+      const m = { fruits:'🍎', vegetables:'🥬', snacks:'🍿', tea:'☕', flowers:'🌸', juice:'🥤',
+        clinic:'🏥', medical:'💊', grocery:'🛒', hardware:'🔧', electrical:'⚡', showroom:'🏪', other:'🛍️' };
+      return m[t] || '🛒';
+    }
+    function getColor(t) {
+      const m = { fruits:'#FF6B35', vegetables:'#1A936F', snacks:'#FF9800', tea:'#8D6E63', flowers:'#E91E63',
+        juice:'#8BC34A', clinic:'#2196F3', medical:'#E53935', grocery:'#FF5722', hardware:'#795548',
+        electrical:'#FFC107', showroom:'#9C27B0', other:'#607D8B' };
+      return m[t] || '#888';
+    }
+    function genUsername(name) {
+      const base = name.toLowerCase().replace(/[^a-z]/g, '').slice(0, 8);
+      const num = Math.floor(100 + Math.random() * 900);
+      return base + num;
+    }
+    function genPassword() {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let p = '';
+      for (let i = 0; i < 6; i++) p += chars[Math.floor(Math.random() * chars.length)];
+      return p;
+    }
+
+    let regData = { photos: [] };
+
+    function goStep2() {
+      const name = document.getElementById('reg-name').value.trim();
+      const items = document.getElementById('reg-items').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      if (!name || !items || !phone) { alert('Please fill all required fields'); return; }
+      regData.name = name;
+      regData.type = document.getElementById('reg-type').value;
+      regData.items = items;
+      regData.phone = phone;
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
+    }
+    function goStep1() {
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+    }
+    function getGPS() {
+      const input = document.getElementById('reg-location');
+      if (navigator.geolocation) {
+        input.value = 'Getting location...';
+        navigator.geolocation.getCurrentPosition(
+          (pos) => { input.value = 'Lat: ' + pos.coords.latitude.toFixed(4) + ', Lng: ' + pos.coords.longitude.toFixed(4); },
+          () => { input.value = 'Koramangala 4th Block, Bangalore'; }
+        );
+      } else {
+        input.value = 'Koramangala 4th Block, Bangalore';
+      }
+    }
+    function addPhoto() {
+      const grid = document.getElementById('photo-grid');
+      const demoUrls = [
+        'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400',
+        'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?w=400',
+        'https://images.unsplash.com/photo-1490750967868-88aa4f44f222?w=400',
+        'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400',
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400'
+      ];
+      const url = demoUrls[Math.floor(Math.random() * demoUrls.length)];
+      const captions = ['Shop front', 'Items display', 'Fresh stock', 'Vendor selfie', 'Cart photo'];
+      const cap = captions[Math.floor(Math.random() * captions.length)];
+      regData.photos.push({ url, caption: cap, status: 'pending' });
+      renderPhotos();
+    }
+    function renderPhotos() {
+      const grid = document.getElementById('photo-grid');
+      grid.innerHTML = regData.photos.map(p => `<img src="${p.url}" class="photo-thumb" alt="${p.caption}">`).join('') +
+        `<div class="photo-add" onclick="addPhoto()"><span class="plus">+</span><span class="label">Add</span></div>`;
+    }
+    function submitRegistration() {
+      const loc = document.getElementById('reg-location').value.trim();
+      if (!loc) { alert('Please enter your location'); return; }
+      regData.location = loc;
+
+      const shared = initSharedState();
+      const newId = 'v' + shared.nextVendorId;
+      shared.nextVendorId++;
+
+      const newVendor = {
+        id: newId,
+        name: regData.name,
+        type: regData.type,
+        items: regData.items,
+        phone: regData.phone,
+        location: regData.location,
+        lat: 12.9352 + (Math.random() - 0.5) * 0.02,
+        lng: 77.6245 + (Math.random() - 0.5) * 0.02,
+        status: 'pending',
+        live: false,
+        suspended: false,
+        rating: 0,
+        reviews: 0,
+        views: 0,
+        calls: 0,
+        lastActive: 'Never',
+        submittedAt: new Date().toLocaleDateString(),
+        emoji: getEmoji(regData.type),
+        color: getColor(regData.type),
+        username: '',
+        password: '',
+        photos: regData.photos.map((p, i) => ({
+          id: 'p' + (shared.nextPhotoId + i),
+          url: p.url,
+          caption: p.caption,
+          status: 'pending',
+          submittedAt: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+          rejectReason: '',
+          type: 'shop'
+        })),
+        products: []
+      };
+      shared.nextPhotoId += regData.photos.length;
+      shared.vendors.push(newVendor);
+      saveState(shared);
+
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.remove('hidden');
+    }
+
+    try {
+      initSharedState();
+    } catch (e) {
+      console.error('initSharedState error:', e);
+    }
+  </script>
+</body>
+</html>

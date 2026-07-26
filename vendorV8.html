@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nukkad — Vendor Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #FF6B35; --primary-light: #FFF0EB; --green: #1A936F; --green-light: #E8F5E9;
+      --blue: #004E89; --blue-light: #E3F2FD; --orange: #F57C00; --orange-light: #FFF8E1;
+      --red: #E53935; --red-light: #FFEBEE; --gray-100: #F7F7F7; --gray-200: #F0F0F0;
+      --gray-300: #E8E8E8; --gray-400: #E0E0E0; --gray-500: #888; --gray-600: #666;
+      --gray-700: #333; --dark: #1A1A2E; --white: #fff;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.06); --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+      --shadow-primary: 0 4px 16px rgba(255,107,53,0.30);
+      --radius-sm: 10px; --radius-md: 12px; --radius-lg: 14px; --radius-xl: 16px; --radius-2xl: 20px; --radius-3xl: 24px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-100); color: var(--dark); height: 100%; overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #app { height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+    .hidden { display: none !important; }
+
+    /* ===== LOGIN PAGE ===== */
+    .login-screen {
+      position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary), #E85D04);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 300; padding: 20px;
+    }
+    .login-card {
+      background: var(--white); border-radius: var(--radius-3xl); padding: 32px;
+      width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .login-logo { text-align: center; margin-bottom: 24px; }
+    .login-logo .icon { width: 56px; height: 56px; background: var(--primary-light); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; font-size: 28px; }
+    .login-logo .title { font-size: 22px; font-weight: 800; margin-top: 8px; }
+    .login-logo .sub { font-size: 13px; color: var(--gray-500); }
+    .login-input {
+      width: 100%; border: 2px solid var(--gray-300); border-radius: var(--radius-lg);
+      padding: 14px 16px; font-size: 15px; font-family: inherit; margin-bottom: 12px;
+      outline: none; transition: border-color 0.2s;
+    }
+    .login-input:focus { border-color: var(--primary); }
+    .login-btn {
+      width: 100%; padding: 16px; background: var(--primary); border-radius: var(--radius-lg);
+      color: var(--white); font-size: 16px; font-weight: 700; border: none; cursor: pointer;
+      box-shadow: var(--shadow-primary); transition: all 0.2s; margin-top: 8px;
+    }
+    .login-btn:active { transform: scale(0.98); }
+    .login-link { text-align: center; margin-top: 16px; font-size: 13px; color: var(--gray-500); }
+    .login-link a { color: var(--primary); font-weight: 600; text-decoration: none; }
+    .login-error { background: var(--red-light); color: var(--red); padding: 10px 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; margin-bottom: 12px; display: none; }
+    .login-error.show { display: block; }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--primary); padding: 16px 20px 20px;
+      border-radius: 0 0 var(--radius-2xl) var(--radius-2xl); flex-shrink: 0; z-index: 10;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; }
+    .logo-row { display: flex; align-items: center; gap: 8px; }
+    .logo-icon { width: 36px; height: 36px; background: var(--white); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .logo-text { color: var(--white); font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .header-link {
+      padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.2);
+      color: #fff; font-size: 13px; font-weight: 600; text-decoration: none;
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s; border: none; cursor: pointer;
+    }
+    .header-link:hover { background: rgba(255,255,255,0.3); }
+
+    /* ===== TABS ===== */
+    .tab-bar {
+      display: flex; gap: 4px; padding: 8px 16px; overflow-x: auto; flex-shrink: 0;
+      background: var(--white); margin: 0 16px; border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm); margin-top: -10px; position: relative; z-index: 5;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex: 1; padding: 10px 8px; border-radius: var(--radius-md); border: none;
+      background: transparent; font-size: 12px; font-weight: 700; color: var(--gray-500);
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .tab-btn.active { background: var(--primary-light); color: var(--primary); }
+
+    /* ===== SCROLL AREA ===== */
+    .vendor-scroll { flex: 1; overflow-y: auto; padding-top: 12px; }
+    .vendor-scroll::-webkit-scrollbar { width: 0; }
+
+    /* ===== CARDS ===== */
+    .panel-card {
+      background: var(--white); border-radius: var(--radius-xl); padding: 20px;
+      margin: 0 16px 12px; box-shadow: var(--shadow-sm);
+    }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .panel-title { font-size: 16px; font-weight: 700; color: var(--dark); }
+    .panel-subtitle { font-size: 13px; color: var(--gray-500); margin-bottom: 16px; }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; }
+    .toggle-label .title { font-weight: 700; font-size: 15px; }
+    .toggle-label .subtitle { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+    .toggle-switch {
+      width: 52px; height: 28px; background: var(--gray-400); border-radius: 14px;
+      position: relative; cursor: pointer; transition: background 0.3s; flex-shrink: 0;
+    }
+    .toggle-switch.active { background: var(--green); }
+    .toggle-switch.disabled { opacity: 0.5; cursor: not-allowed; }
+    .toggle-knob {
+      width: 24px; height: 24px; background: var(--white); border-radius: 50%;
+      position: absolute; top: 2px; left: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: transform 0.3s;
+    }
+    .toggle-switch.active .toggle-knob { transform: translateX(24px); }
+    .status-badge {
+      padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; display: inline-flex;
+    }
+
+    /* ===== PHOTOS ===== */
+    .photo-scroll { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 8px; }
+    .photo-scroll::-webkit-scrollbar { height: 0; }
+    .photo-add {
+      width: 80px; height: 80px; border-radius: var(--radius-md); border: 2px dashed var(--gray-400);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #FAFAFA; cursor: pointer; flex-shrink: 0; transition: all 0.2s;
+    }
+    .photo-add:hover { border-color: var(--primary); background: var(--primary-light); }
+    .photo-add .plus { font-size: 24px; color: var(--gray-500); }
+    .photo-add .label { font-size: 11px; color: var(--gray-500); font-weight: 600; }
+    .photo-thumb { width: 80px; height: 80px; border-radius: var(--radius-md); object-fit: cover; flex-shrink: 0; }
+    .approval-item {
+      display: flex; gap: 12px; padding: 12px; background: #FAFAFA; border-radius: var(--radius-md);
+      margin-bottom: 10px; border: 2px solid transparent;
+    }
+    .approval-item.rejected { border-color: var(--red); }
+    .approval-thumb { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+    .approval-thumb.rejected { opacity: 0.5; }
+    .approval-content { flex: 1; }
+    .approval-content .title { font-weight: 700; font-size: 14px; }
+    .approval-content .text { font-size: 12px; color: var(--gray-500); }
+
+    /* ===== FORMS ===== */
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--gray-500); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input, .form-select {
+      width: 100%; border: 2px solid var(--gray-300); border-radius: var(--radius-md);
+      padding: 12px 14px; font-size: 15px; font-family: inherit; color: var(--dark);
+      outline: none; transition: border-color 0.2s; background: var(--white);
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--primary); }
+    .form-input::placeholder { color: var(--gray-400); }
+    textarea.form-input { height: 80px; resize: none; }
+    .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+    .detail-row { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-200); }
+    .detail-icon { width: 40px; height: 40px; border-radius: var(--radius-md); background: #F5F5F5; display: flex; align-items: center; justify-content: center; color: var(--gray-600); font-size: 16px; flex-shrink: 0; }
+    .detail-content { flex: 1; }
+    .detail-content .title { font-weight: 700; font-size: 14px; color: var(--dark); }
+    .detail-content .text { color: var(--gray-500); font-size: 13px; margin-top: 2px; }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+      flex: 1; padding: 14px; background: var(--primary); border-radius: var(--radius-lg);
+      text-align: center; color: var(--white); font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; box-shadow: var(--shadow-primary); transition: all 0.2s;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary {
+      flex: 1; padding: 14px; background: var(--gray-200); border-radius: var(--radius-lg);
+      text-align: center; color: var(--dark); font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-secondary:active { transform: scale(0.98); }
+    .btn-danger { background: var(--red) !important; box-shadow: 0 4px 16px rgba(229,57,53,0.3) !important; }
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; }
+
+    /* ===== PRODUCTS ===== */
+    .product-card {
+      background: #FAFAFA; border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px;
+      border: 1px solid var(--gray-200);
+    }
+    .product-card .name { font-weight: 700; font-size: 15px; }
+    .product-card .meta { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+    .product-card .cats { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .product-card .cat-tag { background: var(--orange-light); color: var(--orange); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .product-card .actions { display: flex; gap: 6px; margin-top: 8px; }
+    .product-card .actions button { padding: 6px 12px; border-radius: 8px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .product-card .actions .edit { background: var(--blue-light); color: var(--blue); }
+    .product-card .actions .del { background: var(--red-light); color: var(--red); }
+
+    /* ===== MULTI-SELECT CATEGORIES ===== */
+    .cat-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .cat-chip {
+      padding: 8px 14px; border-radius: 20px; border: 2px solid var(--gray-300);
+      background: var(--white); font-size: 12px; font-weight: 600; color: var(--gray-500);
+      cursor: pointer; transition: all 0.2s; user-select: none;
+    }
+    .cat-chip.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+
+    /* ===== SUSPENDED BANNER ===== */
+    .suspended-banner {
+      background: var(--red-light); border: 2px solid var(--red); border-radius: var(--radius-lg);
+      padding: 14px; margin: 0 16px 12px; text-align: center;
+    }
+    .suspended-banner .title { font-weight: 700; color: var(--red); font-size: 15px; }
+    .suspended-banner .text { font-size: 13px; color: var(--gray-600); margin-top: 4px; }
+
+    /* ===== SPINNER ===== */
+    .spinner { width: 48px; height: 48px; border: 4px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- LOGIN SCREEN -->
+    <div class="login-screen" id="login-screen">
+      <div class="login-card">
+        <div class="login-logo">
+          <div class="icon">🛒</div>
+          <div class="title">Vendor Login</div>
+          <div class="sub">Enter your credentials to access dashboard</div>
+        </div>
+        <div class="login-error" id="login-error">Invalid username or password</div>
+        <input type="text" class="login-input" id="login-user" placeholder="Username">
+        <input type="password" class="login-input" id="login-pass" placeholder="Password">
+        <button class="login-btn" onclick="doLogin()">🔐 Login</button>
+        <div class="login-link">
+          New vendor? <a href="vendor-registerV7.html">Register here</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" style="display:none; flex-direction:column; height:100%;">
+      <div class="header">
+        <div class="header-top">
+          <div class="logo-row">
+            <div class="logo-icon">🛒</div>
+            <div class="logo-text">Nukkad</div>
+          </div>
+          <div class="header-actions">
+            <button class="header-link" onclick="logout()">
+              <i class="fas fa-sign-out-alt" style="font-size:12px;"></i> Logout
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar" id="tab-bar">
+        <button class="tab-btn active" onclick="setTab('dashboard')">🏠 Dashboard</button>
+        <button class="tab-btn" onclick="setTab('photos')">📸 Photos</button>
+        <button class="tab-btn" onclick="setTab('products')">🛍️ Products</button>
+        <button class="tab-btn" onclick="setTab('profile')">👤 Profile</button>
+      </div>
+      <div class="vendor-scroll" id="vendor-scroll"></div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'nukkad_data';
+    let memoryState = null;
+
+    function getState() {
+      try {
+        const d = localStorage.getItem(STORAGE_KEY);
+        return d ? JSON.parse(d) : null;
+      } catch (e) {
+        return memoryState;
+      }
+    }
+    function saveState(s) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
+      memoryState = s;
+    }
+
+    function initSharedState() {
+      let s = getState();
+      if (!s) {
+        s = {
+          vendors: [
+            { id:'v1', name:'Raju Fruit Cart', type:'fruits', items:'Mangoes, Bananas, Apples, Papaya',
+              phone:'+91 98765 43210', location:'Koramangala 4th Block, Bangalore',
+              lat:12.9352, lng:77.6245, status:'approved', live:true, suspended:false,
+              rating:4.8, reviews:124, views:1240, calls:89, lastActive:'2 min ago',
+              submittedAt:'2024-01-15', emoji:'🍎', color:'#FF6B35',
+              username:'raju123', password:'pass456',
+              photos:[{id:'p1', url:'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400', caption:'Fresh fruit display', status:'approved'}],
+              products:[{id:'pr1', name:'Mangoes', price:'₹120/kg', categories:['fruits'], available:true}]
+            },
+            { id:'v2', name:'Lakshmi Veggies', type:'vegetables', items:'Tomatoes, Onions, Spinach, Beans',
+              phone:'+91 87654 32109', location:'Koramangala 5th Block, Bangalore',
+              lat:12.9380, lng:77.6260, status:'approved', live:true, suspended:false,
+              rating:4.6, reviews:89, views:890, calls:56, lastActive:'5 min ago',
+              submittedAt:'2024-01-14', emoji:'🥬', color:'#1A936F',
+              username:'lakshmi123', password:'pass456',
+              photos:[], products:[]
+            },
+            { id:'v3', name:'Chai & Snacks', type:'tea', items:'Masala Chai, Samosa, Vada Pav',
+              phone:'+91 76543 21098', location:'Koramangala 6th Block, Bangalore',
+              lat:12.9330, lng:77.6280, status:'approved', live:true, suspended:false,
+              rating:4.9, reviews:256, views:2100, calls:167, lastActive:'1 min ago',
+              submittedAt:'2024-01-13', emoji:'☕', color:'#FF9800',
+              username:'chai123', password:'pass456',
+              photos:[{id:'p2', url:'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?w=400', caption:'Hot chai', status:'approved'}],
+              products:[{id:'pr2', name:'Masala Chai', price:'₹15/cup', categories:['tea'], available:true}]
+            },
+            { id:'v4', name:'Gowda Juice Center', type:'juice', items:'Sugarcane, Tender Coconut, Mosambi',
+              phone:'+91 65432 10987', location:'Koramangala 1st Block, Bangalore',
+              lat:12.9300, lng:77.6200, status:'approved', live:false, suspended:false,
+              rating:4.7, reviews:167, views:670, calls:34, lastActive:'3 hours ago',
+              submittedAt:'2024-01-12', emoji:'🥤', color:'#8BC34A',
+              username:'gowda123', password:'pass456',
+              photos:[], products:[]
+            },
+            { id:'v5', name:'City Medicals', type:'medical', items:'Medicines, First Aid, Health Supplements',
+              phone:'+91 54321 09876', location:'Koramangala 7th Block, Bangalore',
+              lat:12.9400, lng:77.6300, status:'pending', live:false, suspended:false,
+              rating:0, reviews:0, views:0, calls:0, lastActive:'Never',
+              submittedAt:'2024-01-16', emoji:'💊', color:'#E53935',
+              username:'', password:'',
+              photos:[{id:'p3', url:'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', caption:'Shop front', status:'pending'}],
+              products:[]
+            }
+          ],
+          currentVendorId: null,
+          nextVendorId: 6, nextPhotoId: 4, nextProductId: 3
+        };
+        saveState(s);
+      }
+      s.vendors.forEach(v => {
+        if (!v.photos) v.photos = [];
+        if (!v.products) v.products = [];
+        if (v.suspended === undefined) v.suspended = false;
+        if (!v.emoji) v.emoji = getEmoji(v.type);
+        if (!v.color) v.color = getColor(v.type);
+      });
+      return s;
+    }
+
+    function getEmoji(t) {
+      const m = { fruits:'🍎', vegetables:'🥬', snacks:'🍿', tea:'☕', flowers:'🌸', juice:'🥤',
+        clinic:'🏥', medical:'💊', grocery:'🛒', hardware:'🔧', electrical:'⚡', showroom:'🏪', other:'🛍️' };
+      return m[t] || '🛒';
+    }
+    function getColor(t) {
+      const m = { fruits:'#FF6B35', vegetables:'#1A936F', snacks:'#FF9800', tea:'#8D6E63', flowers:'#E91E63',
+        juice:'#8BC34A', clinic:'#2196F3', medical:'#E53935', grocery:'#FF5722', hardware:'#795548',
+        electrical:'#FFC107', showroom:'#9C27B0', other:'#607D8B' };
+      return m[t] || '#888';
+    }
+
+    // ===================== STATE =====================
+    let state = {
+      vendor: null,
+      activeTab: 'dashboard',
+      uploading: false,
+      editProductId: null,
+      selectedProductCats: []
+    };
+
+    // ===================== AUTH =====================
+    function doLogin() {
+      const user = document.getElementById('login-user').value.trim();
+      const pass = document.getElementById('login-pass').value.trim();
+      const shared = initSharedState();
+      const v = shared.vendors.find(v => v.username === user && v.password === pass && v.status === 'approved');
+      if (v) {
+        shared.currentVendorId = v.id;
+        saveState(shared);
+        state.vendor = JSON.parse(JSON.stringify(v));
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'flex';
+        renderContent();
+      } else {
+        document.getElementById('login-error').classList.add('show');
+      }
+    }
+    function logout() {
+      const shared = getState();
+      if (shared) { shared.currentVendorId = null; saveState(shared); }
+      state.vendor = null;
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('login-user').value = '';
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-error').classList.remove('show');
+    }
+    function checkSession() {
+      try {
+        const shared = getState();
+        if (shared && shared.currentVendorId) {
+          const v = shared.vendors.find(v => v.id === shared.currentVendorId);
+          if (v && v.status === 'approved' && !v.suspended) {
+            state.vendor = JSON.parse(JSON.stringify(v));
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'flex';
+            renderContent();
+            return;
+          }
+        }
+      } catch (e) { console.error('checkSession error:', e); }
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('dashboard').style.display = 'none';
+    }
+
+    // ===================== TABS =====================
+    function setTab(tab) {
+      state.activeTab = tab;
+      state.editProductId = null;
+      state.selectedProductCats = [];
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const idx = ['dashboard','photos','products','profile'].indexOf(tab);
+      if (idx >= 0) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+      renderContent();
+    }
+
+    // ===================== SYNC =====================
+    function syncVendor() {
+      const shared = getState();
+      if (!shared || !state.vendor) return;
+      const v = shared.vendors.find(x => x.id === state.vendor.id);
+      if (v) state.vendor = JSON.parse(JSON.stringify(v));
+    }
+    function saveVendor() {
+      const shared = getState();
+      if (!shared || !state.vendor) return;
+      const idx = shared.vendors.findIndex(x => x.id === state.vendor.id);
+      if (idx !== -1) {
+        shared.vendors[idx] = state.vendor;
+        saveState(shared);
+      }
+    }
+
+    // ===================== RENDER =====================
+    function renderContent() {
+      try {
+        syncVendor();
+      } catch (e) { console.error('syncVendor error:', e); }
+      const v = state.vendor;
+      if (!v) return;
+      const container = document.getElementById('vendor-scroll');
+      if (!container) return;
+
+      if (v.suspended) {
+        container.innerHTML = `
+          <div class="suspended-banner">
+            <div class="title">⛔ Account Suspended</div>
+            <div class="text">Your account has been temporarily suspended by admin. Please contact support.</div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-title">Contact Admin</div>
+            <div class="detail-row" style="border:none; padding-top:0;">
+              <div class="detail-icon"><i class="fas fa-envelope"></i></div>
+              <div class="detail-content">
+                <div class="title">support@nukkad.app</div>
+                <div class="text">Email us for any queries</div>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.activeTab === 'dashboard') renderDashboardTab(container, v);
+      else if (state.activeTab === 'photos') renderPhotosTab(container, v);
+      else if (state.activeTab === 'products') renderProductsTab(container, v);
+      else if (state.activeTab === 'profile') renderProfileTab(container, v);
+    }
+
+    function renderDashboardTab(container, v) {
+      const sc = {
+        pending: { bg:'#FFF8E1', color:'#F57C00', text:'⏳ Pending' },
+        approved: { bg:'#E8F5E9', color:'#1A936F', text:'✓ Approved' },
+        rejected: { bg:'#FFEBEE', color:'#E53935', text:'❌ Rejected' }
+      }[v.status] || { bg:'#FFF8E1', color:'#F57C00', text:'⏳ Pending' };
+
+      container.innerHTML = `
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-title">🎯 Status</span>
+            <span class="status-badge" style="background:${sc.bg}; color:${sc.color};">${sc.text}</span>
+          </div>
+          <div class="panel-subtitle">
+            ${v.status === 'approved' ? 'Your shop is approved. Toggle live to get customers.' :
+              v.status === 'pending' ? 'Your profile is under review by admin.' :
+              'Your profile was rejected. Update and resubmit.'}
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">
+              <div class="title">Go Live</div>
+              <div class="subtitle">${v.live ? '🟢 Live now' : 'Toggle to go live'}</div>
+            </div>
+            <div class="toggle-switch ${v.live ? 'active' : ''} ${v.status !== 'approved' ? 'disabled' : ''}" onclick="toggleLive()">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-title">📊 Quick Stats</div>
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">
+            <div style="text-align:center; padding: 12px; background: #FAFAFA; border-radius: 12px;">
+              <div style="font-size: 20px; font-weight: 800;">${v.views || 0}</div>
+              <div style="font-size: 11px; color: #888;">Views</div>
+            </div>
+            <div style="text-align:center; padding: 12px; background: #FAFAFA; border-radius: 12px;">
+              <div style="font-size: 20px; font-weight: 800;">${v.calls || 0}</div>
+              <div style="font-size: 11px; color: #888;">Calls</div>
+            </div>
+            <div style="text-align:center; padding: 12px; background: #FAFAFA; border-radius: 12px;">
+              <div style="font-size: 20px; font-weight: 800;">${v.products?.length || 0}</div>
+              <div style="font-size: 11px; color: #888;">Products</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-title">📍 Location</div>
+          <div class="detail-row" style="border:none; padding-top:8px;">
+            <div class="detail-icon"><i class="fas fa-location-dot"></i></div>
+            <div class="detail-content">
+              <div class="title">${v.location}</div>
+              <div class="text">Last updated: ${v.lastActive}</div>
+            </div>
+          </div>
+          <button class="btn-secondary" style="width:100%; margin-top:8px;" onclick="updateGPS()">🔄 Update Location</button>
+        </div>
+        <div style="height:40px;"></div>
+      `;
+    }
+
+    function renderPhotosTab(container, v) {
+      const approved = v.photos?.filter(p => p.status === 'approved') || [];
+      const pending = v.photos?.filter(p => p.status === 'pending') || [];
+      const rejected = v.photos?.filter(p => p.status === 'rejected') || [];
+
+      container.innerHTML = `
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-title">📸 Shop Photos</span>
+            <span style="font-size:12px; color:#888;">${approved.length} approved</span>
+          </div>
+          <div class="photo-scroll">
+            <div class="photo-add" onclick="pickImage()">
+              ${state.uploading
+                ? `<div class="spinner" style="width:24px;height:24px;border-width:3px;"></div>`
+                : `<span class="plus">+</span><span class="label">Add</span>`}
+            </div>
+            ${approved.map(p => `<img src="${p.url}" class="photo-thumb">`).join('')}
+          </div>
+        </div>
+        ${pending.length > 0 ? `
+          <div class="panel-card">
+            <div class="panel-title" style="margin-bottom:10px;">⏳ Pending Review</div>
+            ${pending.map(p => `
+              <div class="approval-item">
+                <img src="${p.url}" class="approval-thumb">
+                <div class="approval-content">
+                  <div class="title">${p.caption}</div>
+                  <div class="text">Under review by admin</div>
+                  <span class="status-badge" style="background:#FFF8E1; color:#F57C00; margin-top:6px;">⏳ Pending</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        ${rejected.length > 0 ? `
+          <div class="panel-card">
+            <div class="panel-title" style="margin-bottom:10px;">❌ Rejected</div>
+            ${rejected.map(p => `
+              <div class="approval-item rejected">
+                <img src="${p.url}" class="approval-thumb rejected">
+                <div class="approval-content">
+                  <div class="title">${p.caption}</div>
+                  <div class="text">${p.rejectReason || 'Does not meet guidelines'}</div>
+                  <span class="status-badge" style="background:#FFEBEE; color:#E53935; margin-top:6px;">❌ Rejected</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        <div style="height:40px;"></div>
+      `;
+    }
+
+    function renderProductsTab(container, v) {
+      const cats = ['fruits','vegetables','snacks','tea','flowers','juice','clinic','medical','grocery','hardware','electrical','showroom','other'];
+      const catLabels = { fruits:'Fruits', vegetables:'Vegetables', snacks:'Snacks', tea:'Tea Shop', flowers:'Flowers', juice:'Juice',
+        clinic:'Clinic', medical:'Medical', grocery:'Grocery', hardware:'Hardware', electrical:'Electricals', showroom:'Showroom', other:'Other' };
+
+      if (state.editProductId === 'new') {
+        container.innerHTML = `
+          <div class="panel-card">
+            <div class="panel-title">➕ Add Product</div>
+            <div class="form-group" style="margin-top:12px;">
+              <div class="form-label">Product Name *</div>
+              <input type="text" class="form-input" id="prod-name" placeholder="e.g. Masala Chai">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Price *</div>
+              <input type="text" class="form-input" id="prod-price" placeholder="e.g. ₹15/cup">
+            </div>
+            <div class="form-group">
+              <div class="form-label">Categories (select multiple)</div>
+              <div class="cat-grid" id="prod-cat-grid">
+                ${cats.map(c => `<span class="cat-chip" onclick="toggleProdCat('${c}')" data-cat="${c}">${catLabels[c]}</span>`).join('')}
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn-secondary" onclick="setTab('products')">Cancel</button>
+              <button class="btn-primary" onclick="saveProduct()">Save Product</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="panel-card">
+          <div class="panel-header">
+            <span class="panel-title">🛍️ My Products</span>
+            <span style="font-size:12px; color:#888;">${v.products?.length || 0} items</span>
+          </div>
+          <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="startAddProduct()">➕ Add New Product</button>
+        </div>
+        ${(v.products || []).map(p => `
+          <div class="product-card">
+            <div class="name">${p.name} <span style="color:var(--primary); font-size:13px;">${p.price}</span></div>
+            <div class="meta">${p.available !== false ? '✅ Available' : '❌ Not Available'}</div>
+            <div class="cats">${(p.categories || []).map(c => `<span class="cat-tag">${catLabels[c] || c}</span>`).join('')}</div>
+            <div class="actions">
+              <button class="edit" onclick="toggleProductAvail('${p.id}')">${p.available !== false ? 'Mark Unavailable' : 'Mark Available'}</button>
+              <button class="del" onclick="deleteProduct('${p.id}')">Delete</button>
+            </div>
+          </div>
+        `).join('')}
+        <div style="height:40px;"></div>
+      `;
+    }
+
+    function renderProfileTab(container, v) {
+      container.innerHTML = `
+        <div class="panel-card">
+          <div class="panel-title">👤 Profile</div>
+          <div class="form-group" style="margin-top:12px;">
+            <div class="form-label">Shop Name</div>
+            <input type="text" class="form-input" id="prof-name" value="${v.name}">
+          </div>
+          <div class="form-group">
+            <div class="form-label">Phone Number</div>
+            <input type="tel" class="form-input" id="prof-phone" value="${v.phone}">
+          </div>
+          <div class="form-group">
+            <div class="form-label">What do you sell?</div>
+            <input type="text" class="form-input" id="prof-items" value="${v.items}">
+          </div>
+          <div class="form-group">
+            <div class="form-label">Location / Address</div>
+            <input type="text" class="form-input" id="prof-location" value="${v.location}">
+          </div>
+          <button class="btn-primary" style="width:100%;" onclick="saveProfile()">💾 Save Changes</button>
+        </div>
+        <div class="panel-card">
+          <div class="panel-title">🔐 Login Credentials</div>
+          <div class="detail-row" style="border:none; padding-top:8px;">
+            <div class="detail-icon"><i class="fas fa-user"></i></div>
+            <div class="detail-content">
+              <div class="title">Username</div>
+              <div class="text">${v.username || 'Not set (pending approval)'}</div>
+            </div>
+          </div>
+          <div class="detail-row" style="border:none;">
+            <div class="detail-icon"><i class="fas fa-lock"></i></div>
+            <div class="detail-content">
+              <div class="title">Password</div>
+              <div class="text">${v.password ? '••••••' : 'Not set (pending approval)'}</div>
+            </div>
+          </div>
+          <div style="font-size:12px; color:var(--gray-500); margin-top:8px;">
+            Credentials are managed by admin. Contact admin if you need to reset.
+          </div>
+        </div>
+        <div style="height:40px;"></div>
+      `;
+    }
+
+    // ===================== ACTIONS =====================
+    function toggleLive() {
+      syncVendor();
+      if (state.vendor.status !== 'approved') { alert('Wait for admin approval first'); return; }
+      state.vendor.live = !state.vendor.live;
+      state.vendor.lastActive = state.vendor.live ? 'Just now' : 'Offline';
+      saveVendor();
+      alert(state.vendor.live ? 'You are LIVE! Customers can find you now.' : 'You are now offline.');
+      renderContent();
+    }
+    function updateGPS() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            state.vendor.lat = pos.coords.latitude;
+            state.vendor.lng = pos.coords.longitude;
+            state.vendor.location = 'Lat: ' + pos.coords.latitude.toFixed(4) + ', Lng: ' + pos.coords.longitude.toFixed(4);
+            state.vendor.lastActive = 'Just now';
+            saveVendor();
+            alert('Location updated to current GPS position');
+            renderContent();
+          },
+          () => { alert('Could not get location. Please allow location access.'); }
+        );
+      } else {
+        alert('Geolocation not supported');
+      }
+    }
+    function pickImage() {
+      state.uploading = true;
+      renderContent();
+      setTimeout(() => {
+        const demoPhotos = [
+          { url:'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400', caption:'Shop photo', type:'shop' },
+          { url:'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?w=400', caption:'Items display', type:'items' },
+          { url:'https://images.unsplash.com/photo-1490750967868-88aa4f44f222?w=400', caption:'Fresh stock', type:'items' }
+        ];
+        const p = demoPhotos[Math.floor(Math.random() * demoPhotos.length)];
+        const shared = getState();
+        const idx = shared.vendors.findIndex(x => x.id === state.vendor.id);
+        if (idx !== -1) {
+          const newPhoto = { id:'p'+shared.nextPhotoId, ...p, status:'pending',
+            submittedAt: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), rejectReason:'' };
+          shared.nextPhotoId++;
+          shared.vendors[idx].photos.push(newPhoto);
+          saveState(shared);
+          state.vendor.photos = shared.vendors[idx].photos;
+        }
+        state.uploading = false;
+        alert('Photo uploaded! Pending admin approval.');
+        renderContent();
+      }, 1200);
+    }
+    function saveProfile() {
+      state.vendor.name = document.getElementById('prof-name').value.trim();
+      state.vendor.phone = document.getElementById('prof-phone').value.trim();
+      state.vendor.items = document.getElementById('prof-items').value.trim();
+      state.vendor.location = document.getElementById('prof-location').value.trim();
+      saveVendor();
+      alert('Profile updated!');
+      renderContent();
+    }
+    function startAddProduct() {
+      state.editProductId = 'new';
+      state.selectedProductCats = [];
+      renderContent();
+    }
+    function toggleProdCat(cat) {
+      const idx = state.selectedProductCats.indexOf(cat);
+      if (idx >= 0) state.selectedProductCats.splice(idx, 1);
+      else state.selectedProductCats.push(cat);
+      document.querySelectorAll('#prod-cat-grid .cat-chip').forEach(el => {
+        el.classList.toggle('selected', state.selectedProductCats.includes(el.dataset.cat));
+      });
+    }
+    function saveProduct() {
+      const name = document.getElementById('prod-name').value.trim();
+      const price = document.getElementById('prod-price').value.trim();
+      if (!name || !price) { alert('Please fill product name and price'); return; }
+      if (state.selectedProductCats.length === 0) { alert('Please select at least one category'); return; }
+      const shared = getState();
+      const idx = shared.vendors.findIndex(x => x.id === state.vendor.id);
+      if (idx !== -1) {
+        const newProd = { id:'pr'+shared.nextProductId, name, price, categories: [...state.selectedProductCats], available: true };
+        shared.nextProductId++;
+        shared.vendors[idx].products.push(newProd);
+        saveState(shared);
+        state.vendor.products = shared.vendors[idx].products;
+      }
+      state.editProductId = null;
+      state.selectedProductCats = [];
+      alert('Product added!');
+      renderContent();
+    }
+    function toggleProductAvail(id) {
+      const p = state.vendor.products.find(x => x.id === id);
+      if (p) { p.available = p.available === false; saveVendor(); renderContent(); }
+    }
+    function deleteProduct(id) {
+      if (!confirm('Delete this product?')) return;
+      state.vendor.products = state.vendor.products.filter(x => x.id !== id);
+      saveVendor();
+      renderContent();
+    }
+
+    // ===================== SYNC LISTENERS =====================
+    window.addEventListener('storage', (e) => { if (e.key === STORAGE_KEY) { syncVendor(); renderContent(); } });
+    window.addEventListener('focus', () => { syncVendor(); renderContent(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { syncVendor(); renderContent(); } });
+
+    // ===================== INIT =====================
+    checkSession();
+  </script>
+</body>
+</html>

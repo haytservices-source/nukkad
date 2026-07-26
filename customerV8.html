@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nukkad — Find Street Vendors</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #FF6B35; --primary-light: #FFF0EB; --green: #1A936F; --green-light: #E8F5E9;
+      --blue: #004E89; --blue-light: #E3F2FD; --orange: #F57C00; --orange-light: #FFF8E1;
+      --red: #E53935; --red-light: #FFEBEE; --gray-100: #F7F7F7; --gray-200: #F0F0F0;
+      --gray-300: #E8E8E8; --gray-400: #E0E0E0; --gray-500: #888; --gray-600: #666;
+      --gray-700: #333; --dark: #1A1A2E; --white: #fff;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.06); --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+      --shadow-primary: 0 4px 16px rgba(255,107,53,0.30);
+      --radius-sm: 10px; --radius-md: 12px; --radius-lg: 14px; --radius-xl: 16px; --radius-2xl: 20px; --radius-3xl: 24px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-100); color: var(--dark); height: 100%; overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #app { height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--primary); padding: 16px 20px 20px;
+      border-radius: 0 0 var(--radius-2xl) var(--radius-2xl); flex-shrink: 0; z-index: 10;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .logo-row { display: flex; align-items: center; gap: 8px; }
+    .logo-icon { width: 36px; height: 36px; background: var(--white); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .logo-text { color: var(--white); font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .header-link {
+      padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.2);
+      color: #fff; font-size: 13px; font-weight: 600; text-decoration: none;
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .header-link:hover { background: rgba(255,255,255,0.3); }
+    .search-box {
+      background: var(--white); border-radius: var(--radius-lg); padding: 10px 14px;
+      display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-sm);
+    }
+    .search-box i { color: var(--gray-500); font-size: 16px; }
+    .search-box input { flex: 1; border: none; outline: none; font-size: 15px; font-family: inherit; color: var(--dark); }
+    .search-box input::placeholder { color: var(--gray-500); }
+    .loc-pill {
+      display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+      background: rgba(255,255,255,0.2); border-radius: 20px; color: #fff;
+      font-size: 12px; font-weight: 600; margin-top: 10px;
+    }
+
+    /* ===== CATEGORIES ===== */
+    .categories {
+      display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
+    }
+    .categories::-webkit-scrollbar { display: none; }
+    .cat-pill {
+      display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 24px;
+      border: 2px solid var(--gray-300); background: var(--white); font-size: 12px; font-weight: 600;
+      color: var(--gray-500); white-space: nowrap; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+    }
+    .cat-pill.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    .cat-pill i { font-size: 13px; }
+
+    /* ===== VIEW TOGGLE ===== */
+    .view-toggle { display: flex; align-items: center; padding: 0 20px 10px; flex-shrink: 0; }
+    .view-toggle-btn {
+      display: flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; color: var(--gray-500); background: transparent;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .view-toggle-btn.active { background: var(--primary-light); color: var(--primary); }
+    .nearby-count { margin-left: auto; font-size: 13px; color: var(--gray-500); font-weight: 500; }
+
+    /* ===== VENDOR LIST ===== */
+    .vendor-list { flex: 1; overflow-y: auto; padding: 0 20px; padding-bottom: 40px; }
+    .vendor-list::-webkit-scrollbar { width: 0; }
+    .vendor-card {
+      background: var(--white); border-radius: var(--radius-xl); padding: 16px; margin-bottom: 12px;
+      display: flex; gap: 14px; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform 0.15s;
+    }
+    .vendor-card:active { transform: scale(0.98); }
+    .vendor-avatar { width: 56px; height: 56px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+    .vendor-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .vendor-avatar .emoji { font-size: 28px; }
+    .vendor-info { flex: 1; min-width: 0; }
+    .vendor-name-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .vendor-name { font-size: 16px; font-weight: 700; color: var(--dark); }
+    .vendor-type { font-size: 11px; color: var(--gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    .vendor-meta { display: flex; gap: 10px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+    .live-badge { display: flex; align-items: center; gap: 4px; background: var(--green-light); padding: 3px 8px; border-radius: 12px; }
+    .live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .live-text { color: var(--green); font-size: 11px; font-weight: 700; }
+    .meta-text { color: var(--gray-500); font-size: 12px; }
+    .distance-tag { background: var(--blue); padding: 4px 10px; border-radius: 20px; align-self: flex-start; flex-shrink: 0; }
+    .distance-text { color: var(--white); font-size: 12px; font-weight: 700; }
+    .suspended-badge { background: var(--red-light); color: var(--red); padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+
+    /* ===== MAP VIEW ===== */
+    .map-container { flex: 1; position: relative; overflow: hidden; }
+    .map-container iframe { width: 100%; height: 100%; border: none; }
+    .map-pin {
+      position: absolute; width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid var(--white); box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      font-size: 16px; cursor: pointer; transform: translate(-50%, -100%); transition: transform 0.2s;
+    }
+    .map-pin:hover { transform: translate(-50%, -100%) scale(1.15); }
+    .map-pin::after {
+      content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+      border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid var(--white);
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: flex; justify-content: flex-end; align-items: flex-end; z-index: 100;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal-sheet {
+      background: var(--white); border-radius: var(--radius-3xl) var(--radius-3xl) 0 0;
+      padding: 24px; width: 100%; max-height: 85vh; overflow-y: auto;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-overlay.show .modal-sheet { transform: translateY(0); }
+    .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .modal-avatar { width: 72px; height: 72px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .modal-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .modal-avatar .emoji { font-size: 36px; }
+    .close-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--gray-200); display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; font-size: 18px; color: var(--gray-700); }
+    .modal-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+    .modal-title { font-size: 22px; font-weight: 800; color: var(--dark); }
+    .modal-subtitle { color: var(--gray-500); font-size: 14px; margin-bottom: 12px; }
+    .modal-live-badge { display: flex; align-items: center; gap: 4px; background: var(--green-light); padding: 4px 10px; border-radius: 12px; align-self: flex-start; margin: 12px 0; width: fit-content; }
+    .photo-gallery { display: flex; gap: 8px; overflow-x: auto; margin: 12px 0; padding-bottom: 4px; }
+    .photo-gallery::-webkit-scrollbar { height: 0; }
+    .photo-gallery img { width: 120px; height: 120px; border-radius: var(--radius-md); object-fit: cover; flex-shrink: 0; }
+    .menu-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .menu-tag { background: var(--orange-light); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--orange); }
+    .product-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gray-200); }
+    .product-row .name { font-weight: 600; font-size: 14px; }
+    .product-row .price { color: var(--primary); font-weight: 700; font-size: 14px; }
+    .detail-row { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-200); }
+    .detail-icon { width: 40px; height: 40px; border-radius: var(--radius-md); background: #F5F5F5; display: flex; align-items: center; justify-content: center; color: var(--gray-600); font-size: 16px; flex-shrink: 0; }
+    .detail-content { flex: 1; }
+    .detail-content .title { font-weight: 700; font-size: 14px; color: var(--dark); }
+    .detail-content .text { color: var(--gray-500); font-size: 13px; margin-top: 2px; }
+    .action-btns { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-primary {
+      flex: 1; padding: 14px; background: var(--primary); border-radius: var(--radius-lg);
+      text-align: center; color: var(--white); font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; box-shadow: var(--shadow-primary); transition: all 0.2s; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary {
+      flex: 1; padding: 14px; background: var(--gray-200); border-radius: var(--radius-lg);
+      text-align: center; color: var(--dark); font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-secondary:active { transform: scale(0.98); }
+
+    /* ===== LOADING ===== */
+    .loading-screen {
+      position: fixed; inset: 0; background: var(--gray-100);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200;
+      transition: opacity 0.4s, visibility 0.4s;
+    }
+    .loading-screen.hidden { opacity: 0; visibility: hidden; }
+    .spinner { width: 48px; height: 48px; border: 4px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { margin-top: 12px; color: var(--gray-500); font-size: 14px; }
+
+    @media (min-width: 768px) {
+      .modal-sheet { max-width: 480px; margin: 0 auto; border-radius: var(--radius-3xl); max-height: 70vh; }
+      .modal-overlay { align-items: center; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading-screen" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Finding nearby vendors...</div>
+    </div>
+
+    <div id="customer-view" style="display:none; flex-direction:column; height:100%;">
+      <div class="header">
+        <div class="header-top">
+          <div class="logo-row">
+            <div class="logo-icon">🛒</div>
+            <div class="logo-text">Nukkad</div>
+          </div>
+          <div class="header-actions">
+            <a href="vendor-registerV7.html" class="header-link">
+              <i class="fas fa-store" style="font-size:12px;"></i> Sell
+            </a>
+          </div>
+        </div>
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="search-input" placeholder="Search vendors, products..." oninput="handleSearch(this.value)">
+        </div>
+        <div class="loc-pill" id="loc-pill">
+          <i class="fas fa-location-crosshairs"></i> <span id="loc-text">Detecting location...</span>
+        </div>
+      </div>
+
+      <div class="categories" id="categories"></div>
+
+      <div class="view-toggle">
+        <button class="view-toggle-btn active" id="btn-list" onclick="setView('list')">
+          <i class="fas fa-list"></i> List
+        </button>
+        <button class="view-toggle-btn" id="btn-map" onclick="setView('map')">
+          <i class="fas fa-map"></i> Map
+        </button>
+        <span class="nearby-count" id="nearby-count"></span>
+      </div>
+
+      <div class="vendor-list" id="vendor-list"></div>
+      <div class="map-container" id="map-view" style="display:none;">
+        <iframe id="map-iframe" src="" allowfullscreen="" loading="lazy"></iframe>
+        <div id="map-pins"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+      <div class="modal-sheet" id="modal-sheet" onclick="event.stopPropagation()">
+        <div id="modal-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'nukkad_data';
+    let memoryState = null;
+
+    function getState() {
+      try {
+        const d = localStorage.getItem(STORAGE_KEY);
+        return d ? JSON.parse(d) : null;
+      } catch (e) {
+        return memoryState;
+      }
+    }
+    function saveState(s) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
+      memoryState = s;
+    }
+
+    function initSharedState() {
+      let s = getState();
+      if (!s) {
+        s = {
+          vendors: [
+            { id:'v1', name:'Raju Fruit Cart', type:'fruits', items:'Mangoes, Bananas, Apples, Papaya',
+              phone:'+91 98765 43210', location:'Koramangala 4th Block, Bangalore',
+              lat:12.9352, lng:77.6245, status:'approved', live:true, suspended:false,
+              rating:4.8, reviews:124, views:1240, calls:89, lastActive:'2 min ago',
+              submittedAt:'2024-01-15', emoji:'🍎', color:'#FF6B35',
+              username:'raju123', password:'pass456',
+              photos:[{id:'p1', url:'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400', caption:'Fresh fruit display', status:'approved'}],
+              products:[{id:'pr1', name:'Mangoes', price:'₹120/kg', categories:['fruits'], available:true}]
+            },
+            { id:'v2', name:'Lakshmi Veggies', type:'vegetables', items:'Tomatoes, Onions, Spinach, Beans',
+              phone:'+91 87654 32109', location:'Koramangala 5th Block, Bangalore',
+              lat:12.9380, lng:77.6260, status:'approved', live:true, suspended:false,
+              rating:4.6, reviews:89, views:890, calls:56, lastActive:'5 min ago',
+              submittedAt:'2024-01-14', emoji:'🥬', color:'#1A936F',
+              username:'lakshmi123', password:'pass456',
+              photos:[], products:[]
+            },
+            { id:'v3', name:'Chai & Snacks', type:'tea', items:'Masala Chai, Samosa, Vada Pav',
+              phone:'+91 76543 21098', location:'Koramangala 6th Block, Bangalore',
+              lat:12.9330, lng:77.6280, status:'approved', live:true, suspended:false,
+              rating:4.9, reviews:256, views:2100, calls:167, lastActive:'1 min ago',
+              submittedAt:'2024-01-13', emoji:'☕', color:'#FF9800',
+              username:'chai123', password:'pass456',
+              photos:[{id:'p2', url:'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?w=400', caption:'Hot chai', status:'approved'}],
+              products:[{id:'pr2', name:'Masala Chai', price:'₹15/cup', categories:['tea'], available:true}]
+            },
+            { id:'v4', name:'Gowda Juice Center', type:'juice', items:'Sugarcane, Tender Coconut, Mosambi',
+              phone:'+91 65432 10987', location:'Koramangala 1st Block, Bangalore',
+              lat:12.9300, lng:77.6200, status:'approved', live:false, suspended:false,
+              rating:4.7, reviews:167, views:670, calls:34, lastActive:'3 hours ago',
+              submittedAt:'2024-01-12', emoji:'🥤', color:'#8BC34A',
+              username:'gowda123', password:'pass456',
+              photos:[], products:[]
+            },
+            { id:'v5', name:'City Medicals', type:'medical', items:'Medicines, First Aid, Health Supplements',
+              phone:'+91 54321 09876', location:'Koramangala 7th Block, Bangalore',
+              lat:12.9400, lng:77.6300, status:'pending', live:false, suspended:false,
+              rating:0, reviews:0, views:0, calls:0, lastActive:'Never',
+              submittedAt:'2024-01-16', emoji:'💊', color:'#E53935',
+              username:'', password:'',
+              photos:[{id:'p3', url:'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', caption:'Shop front', status:'pending'}],
+              products:[]
+            }
+          ],
+          currentVendorId: null,
+          nextVendorId: 6, nextPhotoId: 4, nextProductId: 3
+        };
+        saveState(s);
+      }
+      s.vendors.forEach(v => {
+        if (!v.photos) v.photos = [];
+        if (!v.products) v.products = [];
+        if (v.suspended === undefined) v.suspended = false;
+        if (!v.emoji) v.emoji = getEmoji(v.type);
+        if (!v.color) v.color = getColor(v.type);
+      });
+      return s;
+    }
+
+    function getEmoji(t) {
+      const m = { fruits:'🍎', vegetables:'🥬', snacks:'🍿', tea:'☕', flowers:'🌸', juice:'🥤',
+        clinic:'🏥', medical:'💊', grocery:'🛒', hardware:'🔧', electrical:'⚡', showroom:'🏪', other:'🛍️' };
+      return m[t] || '🛒';
+    }
+    function getColor(t) {
+      const m = { fruits:'#FF6B35', vegetables:'#1A936F', snacks:'#FF9800', tea:'#8D6E63', flowers:'#E91E63',
+        juice:'#8BC34A', clinic:'#2196F3', medical:'#E53935', grocery:'#FF5722', hardware:'#795548',
+        electrical:'#FFC107', showroom:'#9C27B0', other:'#607D8B' };
+      return m[t] || '#888';
+    }
+
+    // ===================== DATA =====================
+    const CATEGORIES = [
+      { id: 'all', label: 'All', icon: 'fa-star' },
+      { id: 'fruits', label: 'Fruits', icon: 'fa-apple-whole' },
+      { id: 'vegetables', label: 'Veggies', icon: 'fa-leaf' },
+      { id: 'snacks', label: 'Snacks', icon: 'fa-cookie-bite' },
+      { id: 'tea', label: 'Tea Shop', icon: 'fa-mug-hot' },
+      { id: 'flowers', label: 'Flowers', icon: 'fa-spa' },
+      { id: 'juice', label: 'Juice', icon: 'fa-glass-water' },
+      { id: 'clinic', label: 'Clinic', icon: 'fa-user-doctor' },
+      { id: 'medical', label: 'Medical', icon: 'fa-pills' },
+      { id: 'grocery', label: 'Grocery', icon: 'fa-basket-shopping' },
+      { id: 'hardware', label: 'Hardware', icon: 'fa-screwdriver-wrench' },
+      { id: 'electrical', label: 'Electrical', icon: 'fa-bolt' },
+      { id: 'showroom', label: 'Showroom', icon: 'fa-store' },
+    ];
+
+    // ===================== STATE =====================
+    let state = {
+      category: 'all',
+      search: '',
+      view: 'list',
+      selectedVendor: null,
+      vendors: [],
+      customerLat: 12.9352,
+      customerLng: 77.6245
+    };
+
+    function loadVendors() {
+      const shared = initSharedState();
+      state.vendors = shared.vendors.filter(v => v.status === 'approved' && !v.suspended);
+      state.vendors.forEach(v => {
+        const d = haversine(state.customerLat, state.customerLng, v.lat || 12.9352, v.lng || 77.6245);
+        v.distanceMeters = d;
+        v.distance = d < 1000 ? Math.round(d) + 'm' : (d/1000).toFixed(1) + 'km';
+        v.time = d < 200 ? '1 min' : d < 500 ? '3 min' : d < 1000 ? '5 min' : d < 2000 ? '10 min' : '15 min';
+      });
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // ===================== INIT =====================
+    function init() {
+      try {
+        getLocation();
+        loadVendors();
+        renderCategories();
+        renderVendorList();
+      } catch (e) {
+        console.error('Init error:', e);
+      }
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const loading = document.getElementById('loading');
+          const view = document.getElementById('customer-view');
+          if (loading) loading.classList.add('hidden');
+          if (view) view.style.display = 'flex';
+        }, 400);
+      });
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            state.customerLat = pos.coords.latitude;
+            state.customerLng = pos.coords.longitude;
+            const locText = document.getElementById('loc-text');
+            if (locText) locText.textContent = 'Using your current location';
+            loadVendors();
+            renderVendorList();
+            if (state.view === 'map') renderMap();
+          },
+          () => {
+            const locText = document.getElementById('loc-text');
+            if (locText) locText.textContent = 'Koramangala, Bangalore';
+          }
+        );
+      } else {
+        const locText = document.getElementById('loc-text');
+        if (locText) locText.textContent = 'Koramangala, Bangalore';
+      }
+    }
+
+    // ===================== RENDER =====================
+    function renderCategories() {
+      const container = document.getElementById('categories');
+      if (!container) return;
+      container.innerHTML = CATEGORIES.map(cat => `
+        <button class="cat-pill ${state.category === cat.id ? 'active' : ''}" onclick="setCategory('${cat.id}')">
+          <i class="fas ${cat.icon}"></i> ${cat.label}
+        </button>
+      `).join('');
+    }
+
+    function getFilteredVendors() {
+      return state.vendors.filter(v => {
+        const catMatch = state.category === 'all' || v.type === state.category || (v.products || []).some(p => (p.categories || []).includes(state.category));
+        const searchMatch = !state.search ||
+          v.name.toLowerCase().includes(state.search.toLowerCase()) ||
+          v.items.toLowerCase().includes(state.search.toLowerCase()) ||
+          (v.products || []).some(p => p.name.toLowerCase().includes(state.search.toLowerCase()));
+        return catMatch && searchMatch;
+      }).sort((a, b) => (b.live - a.live) || (a.distanceMeters - b.distanceMeters));
+    }
+
+    function renderVendorList() {
+      const filtered = getFilteredVendors();
+      const container = document.getElementById('vendor-list');
+      const countEl = document.getElementById('nearby-count');
+      if (countEl) countEl.textContent = `${filtered.length} nearby · ${filtered.filter(v => v.live).length} live`;
+      if (!container) return;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding: 60px 20px; color: var(--gray-500);">
+            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+            <div style="font-weight: 700; font-size: 18px; margin-bottom: 8px;">No vendors found</div>
+            <div style="font-size: 14px;">Try a different search or check back later.</div>
+          </div>
+          <div style="height:40px;"></div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(vendor => {
+        const approvedPhoto = vendor.photos?.find(p => p.status === 'approved');
+        return `
+          <div class="vendor-card" onclick="openVendorModal('${vendor.id}')">
+            <div class="vendor-avatar" style="background-color: ${vendor.color}20;">
+              ${approvedPhoto ? `<img src="${approvedPhoto.url}" alt="${vendor.name}">` : `<span class="emoji">${vendor.emoji}</span>`}
+            </div>
+            <div class="vendor-info">
+              <div class="vendor-name-row">
+                <span class="vendor-name">${vendor.name}</span>
+              </div>
+              <div class="vendor-type">${vendor.type}</div>
+              <div class="vendor-meta">
+                ${vendor.live
+                  ? `<div class="live-badge"><div class="live-dot"></div><span class="live-text">LIVE</span></div>`
+                  : `<span class="meta-text">⏸️ Closed</span>`}
+                <span class="meta-text">⭐ ${vendor.rating}</span>
+                <span class="meta-text">🕐 ${vendor.time}</span>
+              </div>
+            </div>
+            <div class="distance-tag">
+              <span class="distance-text">${vendor.distance}</span>
+            </div>
+          </div>
+        `;
+      }).join('') + '<div style="height:40px;"></div>';
+    }
+
+    function renderMap() {
+      const iframe = document.getElementById('map-iframe');
+      if (!iframe) return;
+      const center = `${state.customerLat},${state.customerLng}`;
+      iframe.src = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1000!2d${state.customerLng}!3d${state.customerLat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z${encodeURIComponent(center)}!5e0!3m2!1sen!2sin!4v1!5m2!1sen!2sin`;
+      renderMapPins();
+    }
+
+    function renderMapPins() {
+      const filtered = getFilteredVendors();
+      const container = document.getElementById('map-pins');
+      if (!container) return;
+      container.innerHTML = filtered.map(v => {
+        const left = 20 + ((v.lng - (state.customerLng - 0.01)) / 0.02) * 60;
+        const top = 20 + ((v.lat - (state.customerLat - 0.01)) / 0.02) * 60;
+        return `<div class="map-pin" style="background-color:${v.color}; opacity:${v.live?1:0.5}; left:${Math.max(10,Math.min(90,left))}%; top:${Math.max(10,Math.min(90,top))}%;" onclick="openVendorModal('${v.id}')" title="${v.name}">${v.emoji}</div>`;
+      }).join('');
+    }
+
+    // ===================== MODAL =====================
+    function openVendorModal(vendorId) {
+      const shared = getState();
+      const vendor = shared.vendors.find(v => v.id === vendorId);
+      if (!vendor) return;
+      state.selectedVendor = vendor;
+
+      const approvedPhotos = vendor.photos?.filter(p => p.status === 'approved') || [];
+      const items = vendor.items.split(', ');
+      const products = (vendor.products || []).filter(p => p.available !== false);
+      const phoneClean = vendor.phone.replace(/[^+0-9]/g, '');
+      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${vendor.lat || 12.9352},${vendor.lng || 77.6245}`;
+
+      const content = document.getElementById('modal-content');
+      if (!content) return;
+      content.innerHTML = `
+        <div class="modal-header">
+          <div class="modal-avatar" style="background-color: ${vendor.color}20;">
+            ${approvedPhotos.length > 0 ? `<img src="${approvedPhotos[0].url}" alt="${vendor.name}">` : `<span class="emoji">${vendor.emoji}</span>`}
+          </div>
+          <button class="close-btn" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-title-row">
+          <span class="modal-title">${vendor.name}</span>
+        </div>
+        <div class="modal-subtitle">
+          ${vendor.type.charAt(0).toUpperCase() + vendor.type.slice(1)} · ⭐ ${vendor.rating} (${vendor.reviews} reviews)
+        </div>
+        ${vendor.live
+          ? `<div class="modal-live-badge"><div class="live-dot"></div><span class="live-text">Currently Open & Nearby</span></div>`
+          : `<div style="color:#888; margin:12px 0; font-weight:600;">⏸️ Currently Closed</div>`}
+        ${approvedPhotos.length > 0 ? `<div class="photo-gallery">${approvedPhotos.map(p => `<img src="${p.url}" alt="${p.caption}">`).join('')}</div>` : ''}
+        <div class="menu-tags">${items.map(item => `<span class="menu-tag">${item}</span>`).join('')}</div>
+        ${products.length > 0 ? `
+          <div style="margin: 16px 0;">
+            <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px;">🛍️ Products</div>
+            ${products.map(p => `
+              <div class="product-row">
+                <span class="name">${p.name}</span>
+                <span class="price">${p.price}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        <div class="detail-row">
+          <div class="detail-icon"><i class="fas fa-location-dot"></i></div>
+          <div class="detail-content">
+            <div class="title">Location</div>
+            <div class="text">${vendor.location}</div>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-icon"><i class="fas fa-person-walking"></i></div>
+          <div class="detail-content">
+            <div class="title">Distance</div>
+            <div class="text">${vendor.distance} away · ${vendor.time} walk</div>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-icon"><i class="fas fa-phone"></i></div>
+          <div class="detail-content">
+            <div class="title">Contact</div>
+            <div class="text">${vendor.phone}</div>
+          </div>
+        </div>
+        <div class="action-btns">
+          <a href="tel:${phoneClean}" class="btn-primary" onclick="trackCall()">📞 Call Now</a>
+          <a href="${mapsUrl}" target="_blank" class="btn-secondary" rel="noopener">🧭 Directions</a>
+        </div>
+        <button class="btn-secondary" style="width:100%; margin-top:10px;" onclick="alert('Vendor saved to favorites!')">❤️ Save Vendor</button>
+        <div style="height:30px;"></div>
+      `;
+      document.getElementById('modal-overlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(e) {
+      if (e && e.target !== document.getElementById('modal-overlay')) return;
+      document.getElementById('modal-overlay').classList.remove('show');
+      document.body.style.overflow = '';
+      state.selectedVendor = null;
+    }
+
+    function trackCall() {
+      if (state.selectedVendor) {
+        const shared = getState();
+        const idx = shared.vendors.findIndex(v => v.id === state.selectedVendor.id);
+        if (idx !== -1) { shared.vendors[idx].calls = (shared.vendors[idx].calls || 0) + 1; saveState(shared); }
+      }
+    }
+
+    // ===================== ACTIONS =====================
+    function setCategory(cat) {
+      state.category = cat;
+      renderCategories();
+      renderVendorList();
+      if (state.view === 'map') renderMapPins();
+    }
+    function handleSearch(value) {
+      state.search = value;
+      renderVendorList();
+      if (state.view === 'map') renderMapPins();
+    }
+    function setView(view) {
+      state.view = view;
+      document.getElementById('btn-list').classList.toggle('active', view === 'list');
+      document.getElementById('btn-map').classList.toggle('active', view === 'map');
+      document.getElementById('vendor-list').style.display = view === 'list' ? 'block' : 'none';
+      document.getElementById('map-view').style.display = view === 'map' ? 'block' : 'none';
+      if (view === 'map') renderMap();
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    window.addEventListener('storage', (e) => { if (e.key === STORAGE_KEY) { loadVendors(); renderVendorList(); if (state.view === 'map') renderMapPins(); } });
+    window.addEventListener('focus', () => { loadVendors(); renderVendorList(); if (state.view === 'map') renderMapPins(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { loadVendors(); renderVendorList(); if (state.view === 'map') renderMapPins(); } });
+
+    init();
+  </script>
+</body>
+</html>
