@@ -105,18 +105,11 @@ function getEmoji(t) {
       sidebarCollapsed: false, photoTab: 'pending'
     };
 
-    function loadState() {
-      const shared = initSharedState();
-      state.vendors = shared.vendors;
-      state.photos = [];
-      shared.vendors.forEach(v => {
-        if (v.photos) {
-          v.photos.forEach(p => {
-            state.photos.push({ ...p, vendorId: v.id, vendorName: v.name });
-          });
-        }
-      });
-    }
+    function loadState(vendors) {
+
+    state.vendors = vendors;
+
+}
     async function saveAdminState() {
       const shared = getState();
       shared.vendors = state.vendors;
