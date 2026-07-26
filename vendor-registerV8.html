@@ -200,86 +200,24 @@
     </div>
   </div>
 
-  <script>
-    const STORAGE_KEY = 'nukkad_data';
-    let memoryState = null;
+  <script type="module">
 
-    function getState() {
-      try {
-        const d = localStorage.getItem(STORAGE_KEY);
-        return d ? JSON.parse(d) : null;
-      } catch (e) {
-        return memoryState;
-      }
-    }
-    function saveState(s) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
-      memoryState = s;
-    }
+import { addVendor } from "./js/database.js";
+const regData = {
+    photos: []
+};
 
-    function initSharedState() {
-      let s = getState();
-      if (!s) {
-        s = {
-          vendors: [
-            { id:'v1', name:'Raju Fruit Cart', type:'fruits', items:'Mangoes, Bananas, Apples, Papaya',
-              phone:'+91 98765 43210', location:'Koramangala 4th Block, Bangalore',
-              lat:12.9352, lng:77.6245, status:'approved', live:true, suspended:false,
-              rating:4.8, reviews:124, views:1240, calls:89, lastActive:'2 min ago',
-              submittedAt:'2024-01-15', emoji:'🍎', color:'#FF6B35',
-              username:'raju123', password:'pass456',
-              photos:[{id:'p1', url:'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400', caption:'Fresh fruit display', status:'approved'}],
-              products:[{id:'pr1', name:'Mangoes', price:'₹120/kg', categories:['fruits'], available:true}]
-            },
-            { id:'v2', name:'Lakshmi Veggies', type:'vegetables', items:'Tomatoes, Onions, Spinach, Beans',
-              phone:'+91 87654 32109', location:'Koramangala 5th Block, Bangalore',
-              lat:12.9380, lng:77.6260, status:'approved', live:true, suspended:false,
-              rating:4.6, reviews:89, views:890, calls:56, lastActive:'5 min ago',
-              submittedAt:'2024-01-14', emoji:'🥬', color:'#1A936F',
-              username:'lakshmi123', password:'pass456',
-              photos:[], products:[]
-            },
-            { id:'v3', name:'Chai & Snacks', type:'tea', items:'Masala Chai, Samosa, Vada Pav',
-              phone:'+91 76543 21098', location:'Koramangala 6th Block, Bangalore',
-              lat:12.9330, lng:77.6280, status:'approved', live:true, suspended:false,
-              rating:4.9, reviews:256, views:2100, calls:167, lastActive:'1 min ago',
-              submittedAt:'2024-01-13', emoji:'☕', color:'#FF9800',
-              username:'chai123', password:'pass456',
-              photos:[{id:'p2', url:'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?w=400', caption:'Hot chai', status:'approved'}],
-              products:[{id:'pr2', name:'Masala Chai', price:'₹15/cup', categories:['tea'], available:true}]
-            },
-            { id:'v4', name:'Gowda Juice Center', type:'juice', items:'Sugarcane, Tender Coconut, Mosambi',
-              phone:'+91 65432 10987', location:'Koramangala 1st Block, Bangalore',
-              lat:12.9300, lng:77.6200, status:'approved', live:false, suspended:false,
-              rating:4.7, reviews:167, views:670, calls:34, lastActive:'3 hours ago',
-              submittedAt:'2024-01-12', emoji:'🥤', color:'#8BC34A',
-              username:'gowda123', password:'pass456',
-              photos:[], products:[]
-            },
-            { id:'v5', name:'City Medicals', type:'medical', items:'Medicines, First Aid, Health Supplements',
-              phone:'+91 54321 09876', location:'Koramangala 7th Block, Bangalore',
-              lat:12.9400, lng:77.6300, status:'pending', live:false, suspended:false,
-              rating:0, reviews:0, views:0, calls:0, lastActive:'Never',
-              submittedAt:'2024-01-16', emoji:'💊', color:'#E53935',
-              username:'', password:'',
-              photos:[{id:'p3', url:'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', caption:'Shop front', status:'pending'}],
-              products:[]
-            }
-          ],
-          currentVendorId: null,
-          nextVendorId: 6, nextPhotoId: 4, nextProductId: 3
-        };
-        saveState(s);
-      }
-      s.vendors.forEach(v => {
-        if (!v.photos) v.photos = [];
-        if (!v.products) v.products = [];
-        if (v.suspended === undefined) v.suspended = false;
-        if (!v.emoji) v.emoji = getEmoji(v.type);
-        if (!v.color) v.color = getColor(v.type);
-      });
-      return s;
-    }
+function showError(msg){
+    alert(msg);
+}
+
+function showSuccess(){
+
+    document.getElementById("step2").classList.add("hidden");
+
+    document.getElementById("step3").classList.remove("hidden");
+
+}
 
     function getEmoji(t) {
       const m = { fruits:'🍎', vegetables:'🥬', snacks:'🍿', tea:'☕', flowers:'🌸', juice:'🥤',
@@ -303,8 +241,6 @@
       for (let i = 0; i < 6; i++) p += chars[Math.floor(Math.random() * chars.length)];
       return p;
     }
-
-    let regData = { photos: [] };
 
     function goStep2() {
       const name = document.getElementById('reg-name').value.trim();
@@ -354,61 +290,70 @@
       grid.innerHTML = regData.photos.map(p => `<img src="${p.url}" class="photo-thumb" alt="${p.caption}">`).join('') +
         `<div class="photo-add" onclick="addPhoto()"><span class="plus">+</span><span class="label">Add</span></div>`;
     }
-    function submitRegistration() {
-      const loc = document.getElementById('reg-location').value.trim();
-      if (!loc) { alert('Please enter your location'); return; }
-      regData.location = loc;
+    async function submitRegistration() {
 
-      const shared = initSharedState();
-      const newId = 'v' + shared.nextVendorId;
-      shared.nextVendorId++;
+    const loc = document.getElementById("reg-location").value.trim();
 
-      const newVendor = {
-        id: newId,
+    if (!loc) {
+        alert("Please enter your location");
+        return;
+    }
+
+    regData.location = loc;
+
+    const vendor = {
+
         name: regData.name,
         type: regData.type,
         items: regData.items,
         phone: regData.phone,
         location: regData.location,
+
         lat: 12.9352 + (Math.random() - 0.5) * 0.02,
         lng: 77.6245 + (Math.random() - 0.5) * 0.02,
-        status: 'pending',
+
+        status: "pending",
         live: false,
         suspended: false,
+
         rating: 0,
         reviews: 0,
         views: 0,
         calls: 0,
-        lastActive: 'Never',
-        submittedAt: new Date().toLocaleDateString(),
+
+        lastActive: "Never",
+
+        submittedAt: new Date().toISOString(),
+
         emoji: getEmoji(regData.type),
         color: getColor(regData.type),
-        username: '',
-        password: '',
-        photos: regData.photos.map((p, i) => ({
-          id: 'p' + (shared.nextPhotoId + i),
-          url: p.url,
-          caption: p.caption,
-          status: 'pending',
-          submittedAt: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
-          rejectReason: '',
-          type: 'shop'
-        })),
-        products: []
-      };
-      shared.nextPhotoId += regData.photos.length;
-      shared.vendors.push(newVendor);
-      saveState(shared);
 
-      document.getElementById('step2').classList.add('hidden');
-      document.getElementById('step3').classList.remove('hidden');
-    }
+        username: "",
+        password: "",
+
+        photos: regData.photos,
+
+        products: []
+
+    };
 
     try {
-      initSharedState();
-    } catch (e) {
-      console.error('initSharedState error:', e);
+
+        await addVendor(vendor);
+
+        showSuccess();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Registration failed. Please try again.");
+
     }
-  </script>
+
+}
+    
+</script>
+
 </body>
 </html>
