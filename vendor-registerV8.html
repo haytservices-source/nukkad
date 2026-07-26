@@ -333,6 +333,30 @@ function showSuccess(){
     async function submitRegistration() {
 
     const loc = document.getElementById("reg-location").value.trim();
+      const shopPhoto = document.getElementById("shopPhoto").files[0];
+const productPhoto = document.getElementById("productPhoto").files[0];
+const selfiePhoto = document.getElementById("selfiePhoto").files[0];
+const idPhoto = document.getElementById("idPhoto").files[0];
+
+if (!shopPhoto) {
+    alert("Please upload your Shop Photo.");
+    return;
+}
+
+if (!productPhoto) {
+    alert("Please upload your Products Photo.");
+    return;
+}
+
+if (!selfiePhoto) {
+    alert("Please upload your Selfie.");
+    return;
+}
+
+if (!idPhoto) {
+    alert("Please upload your Government ID.");
+    return;
+}
 
     if (!loc) {
         alert("Please enter your location");
