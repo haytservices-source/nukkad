@@ -419,6 +419,10 @@ if (!idPhoto) {
     }
 
     regData.location = loc;
+      regData.shopPhoto = await compressImage(shopPhoto);
+regData.productPhoto = await compressImage(productPhoto);
+regData.selfiePhoto = await compressImage(selfiePhoto);
+regData.governmentId = await compressImage(idPhoto);
 
     const vendor = {
 
@@ -451,10 +455,10 @@ if (!idPhoto) {
         username: "",
         password: "",
 
-        shopPhoto: "",
-        productPhoto: "",
-        selfiePhoto: "",
-        governmentId: "",
+        shopPhoto: regData.shopPhoto,
+productPhoto: regData.productPhoto,
+selfiePhoto: regData.selfiePhoto,
+governmentId: regData.governmentId,
 
         products: []
 
