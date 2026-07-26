@@ -289,26 +289,7 @@ function showSuccess(){
         input.value = 'Koramangala 4th Block, Bangalore';
       }
     }
-    function addPhoto() {
-      const grid = document.getElementById('photo-grid');
-      const demoUrls = [
-        'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400',
-        'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?w=400',
-        'https://images.unsplash.com/photo-1490750967868-88aa4f44f222?w=400',
-        'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400',
-        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400'
-      ];
-      const url = demoUrls[Math.floor(Math.random() * demoUrls.length)];
-      const captions = ['Shop front', 'Items display', 'Fresh stock', 'Vendor selfie', 'Cart photo'];
-      const cap = captions[Math.floor(Math.random() * captions.length)];
-      regData.photos.push({ url, caption: cap, status: 'pending' });
-      renderPhotos();
-    }
-    function renderPhotos() {
-      const grid = document.getElementById('photo-grid');
-      grid.innerHTML = regData.photos.map(p => `<img src="${p.url}" class="photo-thumb" alt="${p.caption}">`).join('') +
-        `<div class="photo-add" onclick="addPhoto()"><span class="plus">+</span><span class="label">Add</span></div>`;
-    }
+ 
     async function submitRegistration() {
 
     const loc = document.getElementById("reg-location").value.trim();
@@ -350,7 +331,10 @@ function showSuccess(){
         username: "",
         password: "",
 
-        photos: regData.photos,
+        shopPhoto: "",
+        productPhoto: "",
+        selfiePhoto: "",
+        governmentId: "",
 
         products: []
 
@@ -374,7 +358,6 @@ function showSuccess(){
 window.goStep2 = goStep2;
 window.goStep1 = goStep1;
 window.getGPS = getGPS;
-window.addPhoto = addPhoto;
 window.submitRegistration = submitRegistration;
     
 </script>
