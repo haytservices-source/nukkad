@@ -284,18 +284,51 @@ function showSuccess(){
       document.getElementById('step2').classList.add('hidden');
       document.getElementById('step1').classList.remove('hidden');
     }
-    function getGPS() {
-      const input = document.getElementById('reg-location');
-      if (navigator.geolocation) {
-        input.value = 'Getting location...';
-        navigator.geolocation.getCurrentPosition(
-          (pos) => { input.value = 'Lat: ' + pos.coords.latitude.toFixed(4) + ', Lng: ' + pos.coords.longitude.toFixed(4); },
-          () => { input.value = 'Koramangala 4th Block, Bangalore'; }
-        );
-      } else {
-        input.value = 'Koramangala 4th Block, Bangalore';
-      }
+   function getGPS() {
+
+    const input = document.getElementById("reg-location");
+
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported.");
+        return;
     }
+
+    input.value = "Getting your location...";
+
+    navigator.geolocation.getCurrentPosition(
+
+        function(position) {
+
+            regData.latitude = position.coords.latitude;
+            regData.longitude = position.coords.longitude;
+            regData.accuracy = Math.round(position.coords.accuracy);
+
+            input.value =
+                position.coords.latitude.toFixed(6) +
+                ", " +
+                position.coords.longitude.toFixed(6);
+
+        },
+
+        function(error) {
+
+            alert("Unable to get location.");
+
+            input.value = "";
+
+            console.log(error);
+
+        },
+
+        {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        }
+
+    );
+
+}
  
     async function submitRegistration() {
 
