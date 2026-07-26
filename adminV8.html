@@ -54,87 +54,181 @@
     .map-embed { width: 100%; height: 200px; border-radius: 12px; border: none; }
     .cred-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px 14px; font-family: monospace; font-size: 13px; }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<base target="_blank">
 </head>
 <body class="min-h-screen">
-  <div id="app"></div>
+  <div id="firebase-loading" style="position:fixed;inset:0;background:#F7F7F7;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="width:48px;height:48px;border:4px solid #FFF0EB;border-top-color:#FF6B35;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+  <div style="margin-top:12px;color:#888;font-size:14px;">Connecting to cloud...</div>
+</div>
+<div id="app"></div>
 
   <script>
     const STORAGE_KEY = 'nukkad_data';
-    let memoryState = null;
+let memoryState = null;
+let db = null;
+let firebaseReady = false;
 
-    function getState() {
-      try {
-        const d = localStorage.getItem(STORAGE_KEY);
-        return d ? JSON.parse(d) : null;
-      } catch (e) {
-        return memoryState;
-      }
-    }
-    function saveState(s) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
-      memoryState = s;
-    }
+function getState() {
+  return memoryState;
+}
 
-    function initSharedState() {
-      let s = getState();
-      if (!s) {
-        s = {
-          vendors: [
-            { id:'v1', name:'Raju Fruit Cart', phone:'+91 98765 43210', type:'fruits', location:'Koramangala 4th Block, Bangalore',
-              lat:12.9352, lng:77.6245, status:'approved', live:true, suspended:false,
-              rating:4.8, reviews:124, views:1240, calls:89, lastActive:'2 min ago',
-              submittedAt:'2024-01-15', emoji:'🍎', color:'#FF6B35',
-              username:'raju123', password:'pass456',
-              photos:[{id:'p1', url:'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400', caption:'Fresh fruit display', status:'approved', type:'items'}],
-              products:[{id:'pr1', name:'Mangoes', price:'₹120/kg', categories:['fruits'], available:true}]
-            },
-            { id:'v2', name:'Lakshmi Veggies', phone:'+91 87654 32109', type:'vegetables', location:'Koramangala 5th Block, Bangalore',
-              lat:12.9380, lng:77.6260, status:'approved', live:true, suspended:false,
-              rating:4.6, reviews:89, views:890, calls:56, lastActive:'5 min ago',
-              submittedAt:'2024-01-14', emoji:'🥬', color:'#1A936F',
-              username:'lakshmi123', password:'pass456',
-              photos:[], products:[]
-            },
-            { id:'v3', name:'Chai & Snacks', phone:'+91 76543 21098', type:'tea', location:'Koramangala 6th Block, Bangalore',
-              lat:12.9330, lng:77.6280, status:'approved', live:true, suspended:false,
-              rating:4.9, reviews:256, views:2100, calls:167, lastActive:'1 min ago',
-              submittedAt:'2024-01-13', emoji:'☕', color:'#FF9800',
-              username:'chai123', password:'pass456',
-              photos:[{id:'p2', url:'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?w=400', caption:'Hot chai', status:'approved', type:'shop'}],
-              products:[{id:'pr2', name:'Masala Chai', price:'₹15/cup', categories:['tea'], available:true}]
-            },
-            { id:'v4', name:'Gowda Juice Center', phone:'+91 65432 10987', type:'juice', location:'Koramangala 1st Block, Bangalore',
-              lat:12.9300, lng:77.6200, status:'approved', live:false, suspended:false,
-              rating:4.7, reviews:167, views:670, calls:34, lastActive:'3 hours ago',
-              submittedAt:'2024-01-12', emoji:'🥤', color:'#8BC34A',
-              username:'gowda123', password:'pass456',
-              photos:[], products:[]
-            },
-            { id:'v5', name:'City Medicals', phone:'+91 54321 09876', type:'medical', location:'Koramangala 7th Block, Bangalore',
-              lat:12.9400, lng:77.6300, status:'pending', live:false, suspended:false,
-              rating:0, reviews:0, views:0, calls:0, lastActive:'Never',
-              submittedAt:'2024-01-16', emoji:'💊', color:'#E53935',
-              username:'', password:'',
-              photos:[{id:'p3', url:'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', caption:'Shop front', status:'pending', type:'shop'}],
-              products:[]
-            }
-          ],
-          currentVendorId: null,
-          nextVendorId: 6, nextPhotoId: 4, nextProductId: 3
-        };
-        saveState(s);
+async function saveState(s) {
+  memoryState = JSON.parse(JSON.stringify(s));
+  if (!db) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
+    return;
+  }
+  const batch = db.batch();
+  const metaRef = db.collection('metadata').doc('appState');
+  batch.set(metaRef, {
+    currentVendorId: s.currentVendorId,
+    nextVendorId: s.nextVendorId,
+    nextPhotoId: s.nextPhotoId,
+    nextProductId: s.nextProductId
+  }, { merge: true });
+  s.vendors.forEach(v => {
+    batch.set(db.collection('vendors').doc(v.id), v);
+  });
+  try {
+    await batch.commit();
+  } catch (e) {
+    console.error('Firebase save error:', e);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e2) {}
+  }
+}
+
+async function deleteVendorDoc(id) {
+  if (!db) return;
+  try {
+    await db.collection('vendors').doc(id).delete();
+  } catch (e) {
+    console.error('Delete error:', e);
+  }
+}
+
+function getDefaultState() {
+  return {
+    vendors: [
+      { id:'v1', name:'Raju Fruit Cart', type:'fruits', items:'Mangoes, Bananas, Apples, Papaya',
+        phone:'+91 98765 43210', location:'Koramangala 4th Block, Bangalore',
+        lat:12.9352, lng:77.6245, status:'approved', live:true, suspended:false,
+        rating:4.8, reviews:124, views:1240, calls:89, lastActive:'2 min ago',
+        submittedAt:'2024-01-15', emoji:'🍎', color:'#FF6B35',
+        username:'raju123', password:'pass456',
+        photos:[{id:'p1', url:'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400', caption:'Fresh fruit display', status:'approved'}],
+        products:[{id:'pr1', name:'Mangoes', price:'₹120/kg', categories:['fruits'], available:true}]
+      },
+      { id:'v2', name:'Lakshmi Veggies', type:'vegetables', items:'Tomatoes, Onions, Spinach, Beans',
+        phone:'+91 87654 32109', location:'Koramangala 5th Block, Bangalore',
+        lat:12.9380, lng:77.6260, status:'approved', live:true, suspended:false,
+        rating:4.6, reviews:89, views:890, calls:56, lastActive:'5 min ago',
+        submittedAt:'2024-01-14', emoji:'🥬', color:'#1A936F',
+        username:'lakshmi123', password:'pass456',
+        photos:[], products:[]
+      },
+      { id:'v3', name:'Chai & Snacks', type:'tea', items:'Masala Chai, Samosa, Vada Pav',
+        phone:'+91 76543 21098', location:'Koramangala 6th Block, Bangalore',
+        lat:12.9330, lng:77.6280, status:'approved', live:true, suspended:false,
+        rating:4.9, reviews:256, views:2100, calls:167, lastActive:'1 min ago',
+        submittedAt:'2024-01-13', emoji:'☕', color:'#FF9800',
+        username:'chai123', password:'pass456',
+        photos:[{id:'p2', url:'https://images.unsplash.com/photo-1561336313-0bd5e0b27ec8?w=400', caption:'Hot chai', status:'approved'}],
+        products:[{id:'pr2', name:'Masala Chai', price:'₹15/cup', categories:['tea'], available:true}]
+      },
+      { id:'v4', name:'Gowda Juice Center', type:'juice', items:'Sugarcane, Tender Coconut, Mosambi',
+        phone:'+91 65432 10987', location:'Koramangala 1st Block, Bangalore',
+        lat:12.9300, lng:77.6200, status:'approved', live:false, suspended:false,
+        rating:4.7, reviews:167, views:670, calls:34, lastActive:'3 hours ago',
+        submittedAt:'2024-01-12', emoji:'🥤', color:'#8BC34A',
+        username:'gowda123', password:'pass456',
+        photos:[], products:[]
+      },
+      { id:'v5', name:'City Medicals', type:'medical', items:'Medicines, First Aid, Health Supplements',
+        phone:'+91 54321 09876', location:'Koramangala 7th Block, Bangalore',
+        lat:12.9400, lng:77.6300, status:'pending', live:false, suspended:false,
+        rating:0, reviews:0, views:0, calls:0, lastActive:'Never',
+        submittedAt:'2024-01-16', emoji:'💊', color:'#E53935',
+        username:'', password:'',
+        photos:[{id:'p3', url:'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', caption:'Shop front', status:'pending'}],
+        products:[]
       }
-      s.vendors.forEach(v => {
+    ],
+    currentVendorId: null,
+    nextVendorId: 6, nextPhotoId: 4, nextProductId: 3
+  };
+}
+
+function initSharedState() {
+  if (!memoryState) {
+    memoryState = getDefaultState();
+  }
+  memoryState.vendors.forEach(v => {
+    if (!v.photos) v.photos = [];
+    if (!v.products) v.products = [];
+    if (v.suspended === undefined) v.suspended = false;
+    if (!v.emoji) v.emoji = getEmoji(v.type);
+    if (!v.color) v.color = getColor(v.type);
+  });
+  return memoryState;
+}
+
+function initFirebase() {
+  const firebaseConfig = {
+    apiKey: "AIzaSyDSmSlbV9frqwJBN5HLxEsJcRPZRAWuEjM",
+    authDomain: "zahed-6b455.firebaseapp.com",
+    projectId: "zahed-6b455",
+    storageBucket: "zahed-6b455.firebasestorage.app",
+    messagingSenderId: "1083482711534",
+    appId: "1:1083482711534:web:8a60e365eb65cad7ab9aff",
+    measurementId: "G-NP4SGR7LC1"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+
+  db.collection('vendors').onSnapshot(snapshot => {
+    const vendors = [];
+    snapshot.forEach(doc => {
+      vendors.push({ id: doc.id, ...doc.data() });
+    });
+
+    db.collection('metadata').doc('appState').get().then(metaDoc => {
+      const meta = metaDoc.exists ? metaDoc.data() : {};
+      const hadData = memoryState && memoryState.vendors && memoryState.vendors.length > 0;
+
+      memoryState = {
+        vendors: vendors.length > 0 ? vendors : (hadData ? memoryState.vendors : getDefaultState().vendors),
+        currentVendorId: meta.currentVendorId !== undefined ? meta.currentVendorId : (memoryState ? memoryState.currentVendorId : null),
+        nextVendorId: meta.nextVendorId !== undefined ? meta.nextVendorId : (memoryState ? memoryState.nextVendorId : 6),
+        nextPhotoId: meta.nextPhotoId !== undefined ? meta.nextPhotoId : (memoryState ? memoryState.nextPhotoId : 4),
+        nextProductId: meta.nextProductId !== undefined ? meta.nextProductId : (memoryState ? memoryState.nextProductId : 3)
+      };
+
+      memoryState.vendors.forEach(v => {
         if (!v.photos) v.photos = [];
         if (!v.products) v.products = [];
         if (v.suspended === undefined) v.suspended = false;
         if (!v.emoji) v.emoji = getEmoji(v.type);
         if (!v.color) v.color = getColor(v.type);
       });
-      return s;
-    }
 
-    function getEmoji(t) {
+      if (vendors.length === 0 && !hadData) {
+        saveState(memoryState);
+      }
+
+      firebaseReady = true;
+      onFirebaseReady();
+    });
+  }, err => {
+    console.error('Firebase error:', err);
+    firebaseReady = true;
+    onFirebaseReady();
+  });
+}
+function getEmoji(t) {
       const m = { fruits:'🍎', vegetables:'🥬', snacks:'🍿', tea:'☕', flowers:'🌸', juice:'🥤',
         clinic:'🏥', medical:'💊', grocery:'🛒', hardware:'🔧', electrical:'⚡', showroom:'🏪', other:'🛍️' };
       return m[t] || '🛒';
@@ -179,15 +273,10 @@
         }
       });
     }
-    function saveAdminState() {
+    async function saveAdminState() {
       const shared = getState();
       shared.vendors = state.vendors;
-      saveState(shared);
-      try {
-        const ts = Date.now().toString();
-        localStorage.setItem('nukkad_trigger', ts);
-        localStorage.removeItem('nukkad_trigger');
-      } catch(e) {}
+      await saveState(shared);
     }
 
     // ===================== UTILS =====================
@@ -266,10 +355,10 @@
       return `
         <header class="bg-white shadow-sm px-6 py-4 flex items-center justify-between sticky top-0 z-40">
           <div class="flex items-center gap-4">
-            <a href="customerV7.html" class="flex items-center gap-2 text-muted hover:text-primary transition-colors text-sm font-semibold mr-4">
+            <a href="customerV8-firebase.html" class="flex items-center gap-2 text-muted hover:text-primary transition-colors text-sm font-semibold mr-4">
               <i class="fas fa-arrow-left"></i> Customer View
             </a>
-            <a href="vendorV7.html" class="flex items-center gap-2 text-muted hover:text-primary transition-colors text-sm font-semibold mr-4">
+            <a href="vendorV8-firebase.html" class="flex items-center gap-2 text-muted hover:text-primary transition-colors text-sm font-semibold mr-4">
               <i class="fas fa-store"></i> Vendor View
             </a>
             <h1 class="text-2xl font-bold text-text">${getPageTitle()}</h1>
@@ -774,59 +863,60 @@
     function closePhotoModal() { state.modalPhoto = null; render(); }
     function openRejectModal(photoId) { const reason = prompt('Rejection reason (required):', 'Photo does not meet guidelines'); if (reason) rejectPhoto(photoId, reason); }
 
-    function approveVendor(id) {
+    async function approveVendor(id) {
       const v = state.vendors.find(x => x.id === id);
       if (v) {
         v.status = 'approved';
         if (!v.username) v.username = genUsername(v.name);
         if (!v.password) v.password = genPassword();
-        saveAdminState();
+        await saveAdminState();
         showToast(`${v.name} approved! Credentials: ${v.username} / ${v.password}`);
       }
       render();
     }
-    function rejectVendor(id) {
+    async function rejectVendor(id) {
       const v = state.vendors.find(x => x.id === id);
-      if (v) { v.status = 'rejected'; v.rejectReason = 'Does not meet guidelines'; saveAdminState(); showToast(`${v.name} rejected.`); }
+      if (v) { v.status = 'rejected'; v.rejectReason = 'Does not meet guidelines'; await saveAdminState(); showToast(`${v.name} rejected.`); }
       render();
     }
-    function toggleVendorLive(id) {
+    async function toggleVendorLive(id) {
       const v = state.vendors.find(x => x.id === id);
-      if (v) { v.live = !v.live; saveAdminState(); showToast(`${v.name} is now ${v.live ? 'LIVE' : 'offline'}`); }
+      if (v) { v.live = !v.live; await saveAdminState(); showToast(`${v.name} is now ${v.live ? 'LIVE' : 'offline'}`); }
       render();
     }
-    function toggleSuspend(id) {
+    async function toggleSuspend(id) {
       const v = state.vendors.find(x => x.id === id);
-      if (v) { v.suspended = !v.suspended; v.live = v.suspended ? false : v.live; saveAdminState(); showToast(`${v.name} ${v.suspended ? 'suspended' : 'unsuspended'}`); }
+      if (v) { v.suspended = !v.suspended; v.live = v.suspended ? false : v.live; await saveAdminState(); showToast(`${v.name} ${v.suspended ? 'suspended' : 'unsuspended'}`); }
       render();
     }
-    function deleteVendor(id) {
+    async function deleteVendor(id) {
       if (!confirm('Are you sure you want to permanently delete this vendor? This cannot be undone.')) return;
       state.vendors = state.vendors.filter(x => x.id !== id);
-      saveAdminState();
+      await deleteVendorDoc(id);
+      await saveAdminState();
       showToast('Vendor deleted permanently.');
       render();
     }
-    function regenCreds(id) {
+    async function regenCreds(id) {
       const v = state.vendors.find(x => x.id === id);
       if (v) {
         v.username = genUsername(v.name);
         v.password = genPassword();
-        saveAdminState();
+        await saveAdminState();
         showToast(`New credentials: ${v.username} / ${v.password}`);
         render();
       }
     }
-    function saveCreds(id) {
+    async function saveCreds(id) {
       const v = state.vendors.find(x => x.id === id);
       if (v) {
         v.username = document.getElementById('cred-user-' + id).value.trim();
         v.password = document.getElementById('cred-pass-' + id).value.trim();
-        saveAdminState();
+        await saveAdminState();
         showToast('Credentials saved!');
       }
     }
-    function batchApprove() {
+    async function batchApprove() {
       state.selectedVendors.forEach(id => {
         const v = state.vendors.find(x => x.id === id);
         if (v) {
@@ -835,67 +925,71 @@
           if (!v.password) v.password = genPassword();
         }
       });
-      saveAdminState();
+      await saveAdminState();
       showToast(`${state.selectedVendors.size} vendors approved!`);
       state.selectedVendors.clear();
       render();
     }
-    function batchReject() {
+    async function batchReject() {
       state.selectedVendors.forEach(id => {
         const v = state.vendors.find(x => x.id === id);
         if (v) { v.status = 'rejected'; v.rejectReason = 'Batch rejection'; }
       });
-      saveAdminState();
+      await saveAdminState();
       showToast(`${state.selectedVendors.size} vendors rejected.`);
       state.selectedVendors.clear();
       render();
     }
-    function approvePhoto(id) {
+    async async function approvePhoto(id) {
       const p = state.photos.find(x => x.id === id);
       if (!p) return;
       const v = state.vendors.find(x => x.id === p.vendorId);
       if (v && v.photos) {
         const photo = v.photos.find(x => x.id === id);
-        if (photo) { photo.status = 'approved'; photo.rejectReason = ''; saveAdminState(); showToast('Photo approved!'); }
+        if (photo) { photo.status = 'approved'; photo.rejectReason = ''; await saveAdminState(); showToast('Photo approved!'); }
       }
       render();
     }
-    function rejectPhoto(id, reason) {
+    async function rejectPhoto(id, reason) {
       const p = state.photos.find(x => x.id === id);
       if (!p) return;
       const v = state.vendors.find(x => x.id === p.vendorId);
       if (v && v.photos) {
         const photo = v.photos.find(x => x.id === id);
-        if (photo) { photo.status = 'rejected'; photo.rejectReason = reason; saveAdminState(); showToast('Photo rejected.'); }
+        if (photo) { photo.status = 'rejected'; photo.rejectReason = reason; await saveAdminState(); showToast('Photo rejected.'); }
       }
       render();
     }
-    function batchApprovePhotos() {
+    async function batchApprovePhotos() {
       state.photos.filter(p => p.status === 'pending').forEach(p => {
         const v = state.vendors.find(x => x.id === p.vendorId);
         if (v && v.photos) { const photo = v.photos.find(x => x.id === p.id); if (photo) { photo.status = 'approved'; photo.rejectReason = ''; } }
       });
-      saveAdminState();
+      await saveAdminState();
       showToast('All pending photos approved!');
       render();
     }
-    function batchRejectPhotos() {
+    async function batchRejectPhotos() {
       state.photos.filter(p => p.status === 'pending').forEach(p => {
         const v = state.vendors.find(x => x.id === p.vendorId);
         if (v && v.photos) { const photo = v.photos.find(x => x.id === p.id); if (photo) { photo.status = 'rejected'; photo.rejectReason = 'Does not meet guidelines'; } }
       });
-      saveAdminState();
+      await saveAdminState();
       showToast('All pending photos rejected.');
       render();
     }
 
-    window.addEventListener('storage', (e) => { if (e.key === STORAGE_KEY) render(); });
     window.addEventListener('focus', () => render());
     document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 
     state.photoTab = 'pending';
-    try {
+    function onFirebaseReady() {
       render();
+      const loading = document.getElementById('firebase-loading');
+      if (loading) loading.style.display = 'none';
+    }
+    try {
+      initFirebase();
     } catch (e) {
       console.error('Initial render error:', e);
       const app = document.getElementById('app');
