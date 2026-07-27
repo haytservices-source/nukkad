@@ -198,9 +198,19 @@ Please upload:
       <button class="btn-secondary" onclick="goStep1()">← Back</button>
       <button class="btn-primary" onclick="submitRegistration()">📤 Submit for Approval</button>
     </div>
+<div class="form-group">
+    <div class="form-label">
+        💳 Payment Screenshot *
+    </div>
 
-    <!-- Step 3: Success -->
-    <div id="step3" class="hidden">
+    <input
+        type="file"
+        id="paymentScreenshot"
+        accept="image/*"
+        capture="environment">
+</div>
+    <!-- Step 4: Success -->
+    <div id="step4" class="hidden">
       <div class="success-box">
         <div class="icon">🎉</div>
         <div class="title">Registration Submitted!</div>
@@ -227,6 +237,7 @@ const regData = {
     productPhoto: "",
     selfiePhoto: "",
     governmentId: "",
+    paymentScreenshot: "",
 
     latitude: "",
     longitude: "",
