@@ -198,17 +198,7 @@ Please upload:
       <button class="btn-secondary" onclick="goStep1()">← Back</button>
       <button class="btn-primary" onclick="submitRegistration()">📤 Submit for Approval</button>
     </div>
-<div class="form-group">
-    <div class="form-label">
-        💳 Payment Screenshot *
-    </div>
 
-    <input
-        type="file"
-        id="paymentScreenshot"
-        accept="image/*"
-        capture="environment">
-</div>
 <!-- Step 3 : Payment -->
 <div id="step3" class="hidden">
 
@@ -473,7 +463,7 @@ if (!idPhoto) {
 regData.shopPhoto = await compressImage(shopPhoto);
 regData.productPhoto = await compressImage(productPhoto);
 regData.selfiePhoto = await compressImage(selfiePhoto);
-regData.governmentId = await compressImage(idPhoto;
+regData.governmentId = await compressImage(idPhoto);
 
 // Hide Step 2
 document.getElementById("step2").classList.add("hidden");
