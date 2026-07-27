@@ -472,12 +472,26 @@ document.getElementById("step2").classList.add("hidden");
 document.getElementById("step3").classList.remove("hidden");
 
 }
+async function completeRegistration(){
 
+    const paymentFile =
+        document.getElementById("paymentScreenshot").files[0];
+
+    if(!paymentFile){
+        alert("Please upload payment screenshot.");
+        return;
+    }
+
+    regData.paymentScreenshot =
+        await compressImage(paymentFile);
+
+}
     
 window.goStep2 = goStep2;
 window.goStep1 = goStep1;
 window.getGPS = getGPS;
 window.submitRegistration = submitRegistration;
+window.completeRegistration = completeRegistration;
     
 </script>
 
