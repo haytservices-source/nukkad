@@ -485,6 +485,62 @@ async function completeRegistration(){
     regData.paymentScreenshot =
         await compressImage(paymentFile);
 
+    const vendor = {
+
+        name: regData.name,
+
+        type: regData.type,
+
+        items: regData.items,
+
+        phone: regData.phone,
+
+        location: regData.location,
+
+        latitude: regData.latitude,
+
+        longitude: regData.longitude,
+
+        accuracy: regData.accuracy,
+
+        emoji: getEmoji(regData.type),
+
+        color: getColor(regData.type),
+
+        username: genUsername(regData.name),
+
+        password: genPassword(),
+
+        approved: false,
+
+        shopPhoto: regData.shopPhoto,
+
+        productPhoto: regData.productPhoto,
+
+        selfiePhoto: regData.selfiePhoto,
+
+        governmentId: regData.governmentId,
+
+        paymentScreenshot: regData.paymentScreenshot,
+
+        products: []
+
+    };
+
+    try{
+
+        await addVendor(vendor);
+
+        showSuccess();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Registration failed. Please try again.");
+
+    }
+
 }
     
 window.goStep2 = goStep2;
