@@ -430,10 +430,19 @@ if (!idPhoto) {
     }
 
     regData.location = loc;
-      regData.shopPhoto = await compressImage(shopPhoto);
+
+regData.shopPhoto = await compressImage(shopPhoto);
 regData.productPhoto = await compressImage(productPhoto);
 regData.selfiePhoto = await compressImage(selfiePhoto);
-regData.governmentId = await compressImage(idPhoto);
+regData.governmentId = await compressImage(idPhoto;
+
+// Hide Step 2
+document.getElementById("step2").classList.add("hidden");
+
+// Show Payment Step
+document.getElementById("step3").classList.remove("hidden");
+
+}
 
     
 window.goStep2 = goStep2;
