@@ -435,61 +435,7 @@ regData.productPhoto = await compressImage(productPhoto);
 regData.selfiePhoto = await compressImage(selfiePhoto);
 regData.governmentId = await compressImage(idPhoto);
 
-    const vendor = {
-
-        name: regData.name,
-        type: regData.type,
-        items: regData.items,
-        phone: regData.phone,
-        location: regData.location,
-
-        lat: regData.latitude,
-        lng: regData.longitude,
-        accuracy: regData.accuracy,
-
-        status: "pending",
-        live: false,
-        suspended: false,
-
-        rating: 0,
-        reviews: 0,
-        views: 0,
-        calls: 0,
-
-        lastActive: "Never",
-
-        submittedAt: new Date().toISOString(),
-
-        emoji: getEmoji(regData.type),
-        color: getColor(regData.type),
-
-        username: "",
-        password: "",
-
-        shopPhoto: regData.shopPhoto,
-productPhoto: regData.productPhoto,
-selfiePhoto: regData.selfiePhoto,
-governmentId: regData.governmentId,
-
-        products: []
-
-    };
-
-    try {
-
-        await addVendor(vendor);
-
-        showSuccess();
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert("Registration failed. Please try again.");
-
-    }
-
-}
+    
 window.goStep2 = goStep2;
 window.goStep1 = goStep1;
 window.getGPS = getGPS;
